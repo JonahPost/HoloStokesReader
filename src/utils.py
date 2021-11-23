@@ -77,16 +77,26 @@ class DataSet():
         self.resistivity_xy = 1. / self.conductivity_xy
         self.kappa_xx = self.kappabar_xx - self.alpha_xx ** 2 * self.temperature / self.conductivity_xx
         self.plasma_frequency = np.sqrt(self.charge_density ** 2 / (self.energy + self.pressure))
-        self.tau_l = self.conductivity_xx / self.plasma_frequency ** 2  # only holds for B=0
+        self.tau_L = self.conductivity_xx / self.plasma_frequency ** 2  # only holds for B=0
+        self.gamma_L = 1/self.tau_L
+        self.equation_of_state =self.energy + self.pressure - self.temperature*self.entropy - self.charge_density # in units of \mu=1
+        self.energy_pressure_ratio = self.energy/self.pressure
 
 
-def polynomial(x, b, c):
-    return b * x + c * x ** 2
+def polynomial(x, a1, a2):
+    return a1 * x + a2 * x ** 2
 
 
 def pol_fit(x, y):
     """"
     Method to make a second order polynomial fit.
     """
-    popt, pcov = curve_fit(polynomial, x, y)
+    x_finite, y_finite = remove_nan(x,y)
+    popt, pcov = curve_fit(polynomial, x_finite, y_finite)
     return popt
+
+def remove_nan(x,y):
+    finite_mask_x = np.isfinite(x)
+    finite_mask_y = np.isfinite(y)
+    finite_mask = (finite_mask_x*finite_mask_y)
+    return x[finite_mask], y[finite_mask]
