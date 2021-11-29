@@ -10,10 +10,12 @@ import matplotlib as mpl
 import numpy as np
 import src.utils as utils
 
+
 class QuantityQuantityPlot:
     """"
     A class to compute desired plots, for any given quantities.
     """
+
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
                  quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix=""):
         # exponential and polynomial will only be fit to model_1
@@ -47,7 +49,7 @@ class QuantityQuantityPlot:
         """
         self.dict = {"temperature": "T",
                      "periodicity": "G",
-                     "lattice_amplitude": "A",}
+                     "lattice_amplitude": "A"}
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
         self.model_1 = model_1
@@ -69,11 +71,9 @@ class QuantityQuantityPlot:
             if self.quantity_multi_line is not None:
                 self.multiline_data2 = getattr(self.model_2, self.quantity_multi_line)[self.mask2]
 
-
         # Initialize figure
-        figure_size = (10,6)
+        figure_size = (10, 6)
         self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
-
 
         self.compute_title_prefix()
         self.compute_title_appendix()
@@ -127,12 +127,12 @@ class QuantityQuantityPlot:
                         self.ax_exp.plot(x2, np.gradient(np.log(y2), x2) * x2, "-x",
                                          label=self.label_prefix2 + line_label, c=line_color)
                 self.cbar2 = self.fig.colorbar(self.cmap2, ax=self.ax1)
-                self.cbar2.set_label(self.label_prefix2+self.dict[self.quantity_multi_line])
+                self.cbar2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
                 if self.exponential:
                     self.cbarexp2 = self.fig.colorbar(self.cmap2, ax=self.ax_exp)
                     self.cbarexp2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
             self.cbar1 = self.fig.colorbar(self.cmap1, ax=self.ax1)
-            self.cbar1.set_label(self.label_prefix1+self.dict[self.quantity_multi_line])
+            self.cbar1.set_label(self.label_prefix1 + self.dict[self.quantity_multi_line])
             if self.exponential:
                 self.cbarexp1 = self.fig.colorbar(self.cmap1, ax=self.ax_exp)
                 self.cbarexp1.set_label(self.label_prefix1 + self.dict[self.quantity_multi_line])
@@ -148,15 +148,14 @@ class QuantityQuantityPlot:
             x2, y2 = utils.sort(self.xdata2, self.ydata2)
             self.ax1.plot(x2, y2, "-x", label=self.label_prefix2 + "data")
             if self.exponential:
-                self.ax_exp.plot(self.xdata1, np.gradient(np.log(self.ydata1), self.xdata1) * self.xdata1, "-x", label=self.label_prefix1 + "exponent")
+                self.ax_exp.plot(self.xdata1, np.gradient(np.log(self.ydata1), self.xdata1) * self.xdata1, "-x",
+                                 label=self.label_prefix1 + "exponent")
             if self.polynomial:
                 popt, pol = utils.pol_fit(self.xdata1, self.ydata1)
                 xrange = np.linspace(self.xdata1[0], self.xdata1[-1])
                 self.ax1.plot(xrange, pol(xrange), label=r"{:.2f}+{:.2f}$x$+{:.2f}$x^2$".format(*popt))
             self.ax1.legend()
         self.ax1.grid()
-
-
 
     def compute_title_appendix(self):
         other_x_quantities = ["temperature", "periodicity", "lattice_amplitude"]
@@ -181,17 +180,17 @@ class QuantityQuantityPlot:
         A method to save the figure. A redirect to the plt.savefig, but can now be applied to a utils.DataSet object.
         """
         path = foldername + "/"
-        fname = path+self.title1.replace(" ", "_")
+        fname = path + self.title1.replace(" ", "_")
         # if self.exponential:
         #     fname += "_exp"
         if self.polynomial:
             fname += "_polyfit"
-        fname_append = "_"+self.fname_appendix + ".png"
-        self.fig.savefig(fname+fname_append, *args, **kwargs)
-        print("fig saved: "+fname+fname_append)
+        fname_append = "_" + self.fname_appendix + ".png"
+        self.fig.savefig(fname + fname_append, *args, **kwargs)
+        print("fig saved: " + fname + fname_append)
         if self.exponential:
-            self.fig_exp.savefig(fname+"_exp"+fname_append, *args, **kwargs)
-            print("fig saved: "+fname+"_exp"+fname_append)
+            self.fig_exp.savefig(fname + "_exp" + fname_append, *args, **kwargs)
+            print("fig saved: " + fname + "_exp" + fname_append)
 
     def make_cbar(self):
         quantities = np.unique(self.multiline_data1)
