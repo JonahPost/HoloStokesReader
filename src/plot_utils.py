@@ -186,7 +186,7 @@ class QuantityQuantityPlot:
         #     fname += "_exp"
         if self.polynomial:
             fname += "_polyfit"
-        fname_append = "_"+self.fname_appendix + ".pdf"
+        fname_append = "_"+self.fname_appendix + ".png"
         self.fig.savefig(fname+fname_append, *args, **kwargs)
         print("fig saved: "+fname+fname_append)
         if self.exponential:
