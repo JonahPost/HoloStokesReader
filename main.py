@@ -45,11 +45,12 @@ if __name__ == '__main__':
     # IO_utils.save(a)
 
     plots_list = [
-        QuantityQuantityPlot("temperature", "entropy", EMD, RN, quantity_multi_line="lattice_amplitude", exponential=True, mask1=Tcutoff_emd, mask2=Tcutoff_rn),
-        QuantityQuantityPlot("temperature", "resistivity_xx", EMD, quantity_multi_line="lattice_amplitude", polynomial=True, mask1=Tcutoff_emd, mask2=Tcutoff_rn),
-        QuantityQuantityPlot("temperature", "resistivity_xx", EMD, RN, quantity_multi_line="lattice_amplitude", mask1=Tcutoff_emd, mask2=Tcutoff_rn),
-        QuantityQuantityPlot("temperature", "alpha_xx", EMD, quantity_multi_line="lattice_amplitude", mask1=Anot0_emd).ax1.legend(),
-        QuantityQuantityPlot("temperature", "kappa_xx", EMD, quantity_multi_line="lattice_amplitude", mask1=Anot0_emd),
+        # QuantityQuantityPlot("temperature", "entropy", EMD, RN, quantity_multi_line="lattice_amplitude", exponential=True, mask1=Tcutoff_emd, mask2=Tcutoff_rn),
+        # QuantityQuantityPlot("temperature", "resistivity_xx", EMD, quantity_multi_line="lattice_amplitude", polynomial=True, mask1=Tcutoff_emd, mask2=Tcutoff_rn),
+        # QuantityQuantityPlot("temperature", "resistivity_xx", EMD, RN, quantity_multi_line="lattice_amplitude", mask1=Tcutoff_emd, mask2=Tcutoff_rn),
+        # QuantityQuantityPlot("temperature", "alpha_xx", EMD, quantity_multi_line="lattice_amplitude", mask1=Anot0_emd).ax1.legend(),
+        # QuantityQuantityPlot("temperature", "kappa_xx", EMD, quantity_multi_line="lattice_amplitude", mask1=Anot0_emd),
+        # QuantityQuantityPlot("temperature", "sigma", EMD, quantity_multi_line="lattice_amplitude", mask1=Anot0_emd),
         # QuantityQuantityPlot("temperature", "gamma_L_from_sigma", EMD, quantity_multi_line="lattice_amplitude", mask1=Tcutoff_emd),
         # QuantityQuantityPlot("temperature", "gamma_L_from_alpha", EMD, quantity_multi_line="lattice_amplitude", mask1=Tcutoff_emd),
         # QuantityQuantityPlot("temperature", "gamma_L_from_kappabar", EMD, quantity_multi_line="lattice_amplitude", mask1=Tcutoff_emd),
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     print("plots are build")
 
     # Uncomment the following line to save the plot
-    # IO_utils.save(plots_list)
+    IO_utils.save(plots_list)
 
 
     plt.show()

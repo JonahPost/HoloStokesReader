@@ -170,10 +170,10 @@ class QuantityQuantityPlot:
     def compute_title_prefix(self):
         if self.model_2 is not None:
             self.title_prefix = ""
-            self.label_prefix1 = self.model_1.model + ": "
-            self.label_prefix2 = self.model_2.model + ": "
+            self.label_prefix1 = self.model_1.model + "- "
+            self.label_prefix2 = self.model_2.model + "- "
         else:
-            self.title_prefix = self.model_1.model + ": "
+            self.title_prefix = self.model_1.model + "- "
             self.label_prefix1 = ""
 
     def savefig(self, foldername, *args, **kwargs):
@@ -187,9 +187,11 @@ class QuantityQuantityPlot:
         if self.polynomial:
             fname += "_polyfit"
         fname_append = "_"+self.fname_appendix + ".pdf"
-        self.fig.savefig(fname+fname_append + ".pdf",*args, **kwargs)
+        self.fig.savefig(fname+fname_append, *args, **kwargs)
+        print("fig saved: "+fname+fname_append)
         if self.exponential:
             self.fig_exp.savefig(fname+"_exp"+fname_append, *args, **kwargs)
+            print("fig saved: "+fname+"_exp"+fname_append)
 
     def make_cbar(self):
         quantities = np.unique(self.multiline_data1)
