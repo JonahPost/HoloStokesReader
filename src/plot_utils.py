@@ -85,7 +85,7 @@ class QuantityQuantityPlot:
             self.ax1.set_xscale("log")
         if logy:
             self.ax1.set_yscale("log")
-        if self.exponential == True:
+        if self.exponential:
             self.fig_exp, self.ax_exp = plt.subplots(1, 1, figsize=figure_size)
             self.ax_exp.grid()
             self.ax_exp.set_ylabel("exponent")
@@ -93,6 +93,9 @@ class QuantityQuantityPlot:
             self.ax_exp.set_title(
                 f"{self.model_1.model}: {self.y_quantity_name} exponent" + self.title_appendix)
         self.plot_lines()
+        self.fig.tight_layout()
+        if self.exponential:
+            self.fig_exp.tight_layout()
 
     def plot_lines(self):
         """"
@@ -110,10 +113,9 @@ class QuantityQuantityPlot:
                     self.ax_exp.plot(x, np.gradient(np.log(y), x) * x, "-x",
                                      label=self.label_prefix1 + line_label, c=line_color)
                 if self.polynomial:
-                    popt = utils.pol_fit(x, y)
+                    popt, pol = utils.pol_fit(x, y)
                     xrange = np.linspace(x[0], x[-1])
-                    self.ax1.plot(xrange, utils.polynomial(xrange, *popt), "--", label=r"{:.0f}+{:.0f}$x$+{:.0f}$x^2$".format(*popt), c="k")
-                    self.ax1.legend()
+                    self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}+{:.2g}$x$+{:.2g}$x^2$".format(*popt), c="k")
             if self.model_2 is not None:
                 for i, quantity_value in enumerate(np.unique(self.multiline_data2)):
                     mask = (self.multiline_data2 == quantity_value)
@@ -134,6 +136,11 @@ class QuantityQuantityPlot:
             if self.exponential:
                 self.cbarexp1 = self.fig.colorbar(self.cmap1, ax=self.ax_exp)
                 self.cbarexp1.set_label(self.label_prefix1 + self.dict[self.quantity_multi_line])
+            if self.polynomial:
+                self.cbar1.remove()
+                if self.model_2 is not None:
+                    self.cbar2.remove()
+                self.ax1.legend(loc=(1, 0))
 
         else:
             x, y = utils.sort(self.xdata1, self.ydata1)
@@ -143,9 +150,9 @@ class QuantityQuantityPlot:
             if self.exponential:
                 self.ax_exp.plot(self.xdata1, np.gradient(np.log(self.ydata1), self.xdata1) * self.xdata1, "-x", label=self.label_prefix1 + "exponent")
             if self.polynomial:
-                popt = utils.pol_fit(self.xdata1, self.ydata1)
+                popt, pol = utils.pol_fit(self.xdata1, self.ydata1)
                 xrange = np.linspace(self.xdata1[0], self.xdata1[-1])
-                self.ax1.plot(xrange, utils.polynomial(xrange, *popt), label=r"{:.2f}+{:.2f}$x$+{:.2f}$x^2$".format(*popt))
+                self.ax1.plot(xrange, pol(xrange), label=r"{:.2f}+{:.2f}$x$+{:.2f}$x^2$".format(*popt))
             self.ax1.legend()
         self.ax1.grid()
 
@@ -187,7 +194,7 @@ class QuantityQuantityPlot:
     def make_cbar(self):
         quantities = np.unique(self.multiline_data1)
         norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
-        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter)
+        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
         self.cmap1.set_array([])
         if self.model_2 is not None:
             quantities = np.unique(self.multiline_data2)

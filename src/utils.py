@@ -88,8 +88,8 @@ class DataSet():
         self.gamma_L_from_kappabar = (1 / self.kappabar_xx) * (self.entropy**2 * self.temperature) / (self.energy + self.pressure)
 
 
-def polynomial(x, a0, a1, a2):
-    return a0 + a1 * x + a2 * x ** 2
+# def polynomial(x, a0, a1, a2):
+#     return a0 + a1 * x + a2 * x ** 2
 
 
 def pol_fit(x, y):
@@ -97,8 +97,10 @@ def pol_fit(x, y):
     Method to make a second order polynomial fit.
     """
     x_finite, y_finite = remove_nan(x,y)
-    popt, pcov = curve_fit(polynomial, x_finite, y_finite)
-    return popt
+    popt = np.polyfit(x_finite, y_finite, 2)
+    # popt, pcov = curve_fit(polynomial, x_finite, y_finite)
+    polynomial = np.poly1d(popt)
+    return popt, polynomial
 
 def remove_nan(x,y):
     finite_mask_x = np.isfinite(x)
