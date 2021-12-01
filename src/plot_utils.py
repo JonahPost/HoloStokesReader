@@ -115,14 +115,14 @@ class QuantityQuantityPlot:
                 if self.polynomial:
                     popt, pol = utils.pol_fit(x, y)
                     xrange = np.linspace(x[0], x[-1])
-                    self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}+{:.2g}$x$+{:.2g}$x^2$".format(*popt), c="k")
+                    self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}$x$+{:.2g}$x^2$".format(*popt), c="k")
             if self.model_2 is not None:
                 for i, quantity_value in enumerate(np.unique(self.multiline_data2)):
                     mask = (self.multiline_data2 == quantity_value)
                     x2, y2 = utils.sort(self.xdata2[mask], self.ydata2[mask])
                     line_label = self.dict[self.quantity_multi_line] + "=" + str(quantity_value)
                     line_color = self.cmap2.to_rgba(quantity_value)
-                    self.ax1.plot(x2, y2, ":+", label=self.label_prefix2 + line_label, c=line_color)
+                    self.ax1.plot(x2, y2, "-x", label=self.label_prefix2 + line_label, c=line_color)
                     if self.exponential:
                         self.ax_exp.plot(x2, np.gradient(np.log(y2), x2) * x2, "-x",
                                          label=self.label_prefix2 + line_label, c=line_color)
@@ -196,6 +196,8 @@ class QuantityQuantityPlot:
         quantities = np.unique(self.multiline_data1)
         norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
         self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
+        if self.model_1.model == "RN" or self.model_1.model == "rn":
+            self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.Wistia)
         self.cmap1.set_array([])
         if self.model_2 is not None:
             quantities = np.unique(self.multiline_data2)

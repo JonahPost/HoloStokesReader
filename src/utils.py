@@ -65,6 +65,7 @@ class DataSet():
         # self.rhoH              =  self.data["rhoH"].to_numpy()
         self.energy = -self.data["Ttt"].to_numpy()  # energy stress tensor
         self.pressure = self.data["Txx"].to_numpy()
+        self.pressurediffxxyy = self.data["Txx"].to_numpy() - self.data["Tyy"].to_numpy()
         self.free_energy = self.data[self.free_energy_key].to_numpy()
         self.internal_energy = self.data[self.internal_energy_key].to_numpy()
         self.charge_density = self.data["rho"].to_numpy()
@@ -80,16 +81,43 @@ class DataSet():
         self.equation_of_state =self.energy + self.pressure - self.temperature*self.entropy - self.charge_density # in units of \mu=1
         self.energy_pressure_ratio = self.energy/self.pressure
         self.one_over_mu = 1/self.chem_pot
-        self.wf_ratio_s2_over_rho2 = (self.entropy/self.charge_density)**2
-        self.wf_ratio_kappa_over_sigmaT = (self.kappabar_xx/(self.conductivity_xx*self.temperature))
+        self.s2_over_rho2 = (self.entropy/self.charge_density)**2
+        self.wf_ratio = (self.kappabar_xx/(self.conductivity_xx*self.temperature))
 
         self.gamma_L_from_sigma =  (1/self.conductivity_xx) * (self.charge_density**2)/(self.energy + self.pressure)  # only holds for B=0
         self.gamma_L_from_alpha =  (1/self.alpha_xx) * (self.charge_density * self.entropy)/(self.energy + self.pressure)
         self.gamma_L_from_kappabar = (1 / self.kappabar_xx) * (self.entropy**2 * self.temperature) / (self.energy + self.pressure)
 
+        self.sigmaQ_from_sigma_alpha = self.sigmaQ_from_sigma_alpha()
+        self.sigmaQ_from_sigma_kappabar = self.sigmaQ_from_sigma_kappabar()
+        self.sigmaQ_from_alpha_kappabar = self.sigmaQ_from_alpha_kappabar()
 
-# def polynomial(x, a0, a1, a2):
-#     return a0 + a1 * x + a2 * x ** 2
+    def sigmaQ_from_sigma_alpha(self):
+        sigma = self.conductivity_xx
+        alpha = self.alpha_xx
+        s = self.entropy
+        T = self.temperature
+        rho = self.charge_density
+        return (sigma - (rho/s)*alpha ) / (1 + (rho/(T*s)))
+
+    def sigmaQ_from_sigma_kappabar(self):
+        sigma = self.conductivity_xx
+        kappabar = self.kappabar_xx
+        s = self.entropy
+        T = self.temperature
+        rho = self.charge_density
+        return (sigma - (rho**2 / (s**2 * T))*kappabar) / (1 - (rho**2 / (s**2 * T**2)))
+
+    def sigmaQ_from_alpha_kappabar(self):
+        alpha = self.alpha_xx
+        kappabar = self.kappabar_xx
+        s = self.entropy
+        T = self.temperature
+        rho = self.charge_density
+        return( (rho/(s*T))*kappabar - alpha) / ( (rho/(T**2 * s)) + (1/T) )
+
+def polynomial(x, a2, a1):
+    return a2 * (x**2) + a1 * x
 
 
 def pol_fit(x, y):
@@ -97,10 +125,10 @@ def pol_fit(x, y):
     Method to make a second order polynomial fit.
     """
     x_finite, y_finite = remove_nan(x,y)
-    popt = np.polyfit(x_finite, y_finite, 2)
+    popt, pcov = curve_fit(polynomial, x_finite, y_finite)
     # popt, pcov = curve_fit(polynomial, x_finite, y_finite)
-    polynomial = np.poly1d(popt)
-    return popt, polynomial
+    pol = np.poly1d(np.append(popt,0))
+    return popt, pol
 
 def remove_nan(x,y):
     finite_mask_x = np.isfinite(x)
