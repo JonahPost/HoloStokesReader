@@ -6,9 +6,12 @@ Created on Wed Nov 17 14:12:45 2021
 """
 
 import numpy as np
+from numpy import ndarray
+
 from src.utils import DataSet
 import src.utils as utils
 from src.plot_utils import *
+import src.physics as physics
 import matplotlib.pyplot as plt
 import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
@@ -22,11 +25,11 @@ path = "data/"
 if __name__ == '__main__':
     EMD = DataSet(model="EMD", fname=path + EMD_fname)
     RN = DataSet(model="RN", fname=path + RN_fname)
-    EMD.gamma_reldiff_sigma_alpha = (EMD.gamma_L_from_sigma - EMD.gamma_L_from_alpha) / EMD.gamma_L_from_sigma
-    EMD.gamma_reldiff_sigma_kappabar = (EMD.gamma_L_from_sigma - EMD.gamma_L_from_kappabar) / EMD.gamma_L_from_sigma
-    RN.gamma_reldiff_sigma_alpha = (RN.gamma_L_from_sigma - RN.gamma_L_from_alpha) / RN.gamma_L_from_sigma
-    RN.gamma_reldiff_sigma_kappabar = (RN.gamma_L_from_sigma - RN.gamma_L_from_kappabar) / RN.gamma_L_from_sigma
     print("Data is imported")
+    for dataset in [EMD, RN]:
+        print(dataset.model)
+        physics.calc_properties(dataset)
+
     # masks
     Anot0_emd = (EMD.lattice_amplitude != 0)
     Acutoff_emd = (EMD.lattice_amplitude > 0.02001)
@@ -72,13 +75,22 @@ if __name__ == '__main__':
         mask_fit(T0_03mask, resfig4)
         mask_fit(T0_04mask, resfig4)
         mask_fit(T0_05mask, resfig4)
-        plots_list = [resfig1, resfig2, resfig3, resfig4]
         if save:
+            plots_list = [resfig1, resfig2, resfig3, resfig4]
             IO_utils.save(plots_list)
         return
 
 
     def plot_gammaL(save=False):
+        fig_sigma = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_sigma", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
+        fig_alpha = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_alpha", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
+        fig_kappabar = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_kappabar", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
+        fig_sigma.ax1.set_ylim(ymax=0.0075)
+        fig_alpha.ax1.set_ylim(ymax=0.0075)
+        fig_kappabar.ax1.set_ylim(ymax=0.0075)
         fig1 = QuantityQuantityPlot("lattice_amplitude", "gamma_reldiff_sigma_alpha", EMD,
                                     quantity_multi_line="temperature",
                                     mask1=Tcutoff_emd * Anot0_emd)
@@ -95,8 +107,8 @@ if __name__ == '__main__':
                                     mask1=Tcutoff_rn * Anot0_rn)
         fig3.ax1.set_ylim(-.05, .025)
         fig4.ax1.set_ylim(-.05, .025)
-        plots_list = [fig1, fig2, fig3, fig4]
         if save:
+            plots_list = [fig_sigma, fig_alpha, fig_kappabar, fig1, fig2, fig3, fig4]
             IO_utils.save(plots_list)
         return
 
@@ -165,6 +177,20 @@ if __name__ == '__main__':
             IO_utils.save([fig0, fig1, fig2, fig3])
         return
 
+    def plot_drude_weight(save=False):
+        fig1 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_energy_pressure", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
+        fig2 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_temperature_entropy", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
+        fig3 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_A0_from_energy_pressure", EMD,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
+        fig1.ax1.set_ylim(ymax=1.6)
+        fig2.ax1.set_ylim(ymax=1.6)
+        fig3.ax1.set_ylim(ymax=1.6)
+        if save:
+            IO_utils.save([fig1, fig2, fig3])
+        return
+
     # plot_energy_pressure()
     # plot_resistivity()
     # plot_gammaL()
@@ -172,8 +198,15 @@ if __name__ == '__main__':
     # plot_wf_ratio()
     # plot_EoS()
     # plot_sigmaQ()
-    QuantityQuantityPlot("lattice_amplitude", "plasma_frequency", RN, quantity_multi_line="temperature")
-    QuantityQuantityPlot("lattice_amplitude", "plasma_frequency", EMD, quantity_multi_line="temperature", mask1=Tcutoff_emd)
+    # plot_drude_weight()
+    # print(np.max(EMD.drude_weight_A0_from_temperature_entropy - EMD.drude_weight_A0_from_energy_pressure))
+
+    # QuantityQuantityPlot("lattice_amplitude", "entropy", RN, quantity_multi_line="temperature", mask1=Tcutoff_rn)
+    figlist = [
+        QuantityQuantityPlot("lattice_amplitude", "charge_density", EMD, RN, quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
+        ]
+    IO_utils.save(figlist)
+    # d = pd.DataFrame(d={'T': EMD.temperature, 'A': EMD.lattice_amplitude, 'plasmon_frequency_squared': EMD.plasmon_frequency_squared})
     print("plots are build")
     plt.show()
     plt.close()

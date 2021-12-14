@@ -27,7 +27,7 @@ class DataSet():
         self.filename = fname
         self.specify_model()
         self.import_data()
-        self.calc_properties()
+        # self.calc_properties()
 
     def specify_model(self):
         """"
@@ -50,6 +50,7 @@ class DataSet():
 
     def import_data(self):
         self.data = pd.read_csv(self.filename, sep="\t")
+        self.data = self.data.sort_values(by=[self.lattice_amplitude_key, "T"])
         self.periodicity = self.data[self.periodicity_key].to_numpy()
         self.lattice_amplitude = self.data[self.lattice_amplitude_key].to_numpy()
         self.temperature = self.data["T"].to_numpy()
@@ -76,7 +77,8 @@ class DataSet():
         self.resistivity_xx = 1. / self.conductivity_xx
         self.resistivity_xy = 1. / self.conductivity_xy
         self.kappa_xx = self.kappabar_xx - self.alpha_xx ** 2 * self.temperature / self.conductivity_xx
-        self.plasma_frequency = np.sqrt(self.charge_density ** 2 / (self.energy + self.pressure))
+        self.plasmon_frequency_squared_from_pressure = (self.charge_density ** 2 / (self.energy + self.pressure))
+        self.plasmon_frequency_squared_from_temperature = (self.charge_density ** 2 / (self.entropy*self.temperature + self.charge_density))
 
         self.equation_of_state =self.energy + self.pressure - self.temperature*self.entropy - self.charge_density # in units of \mu=1
         self.energy_pressure_ratio = self.energy/self.pressure
@@ -139,3 +141,4 @@ def remove_nan(x,y):
 def sort(x,y):
     ind = np.argsort(x)
     return x[ind], y[ind]
+    # return x,y

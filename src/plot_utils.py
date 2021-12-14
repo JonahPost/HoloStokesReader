@@ -155,6 +155,8 @@ class QuantityQuantityPlot:
                 xrange = np.linspace(self.xdata1[0], self.xdata1[-1])
                 self.ax1.plot(xrange, pol(xrange), label=r"{:.2f}+{:.2f}$x$+{:.2f}$x^2$".format(*popt))
             self.ax1.legend()
+        if not any(self.ydata1 < 0):
+            self.ax1.set_ylim(ymin=0)
         self.ax1.grid()
 
     def compute_title_appendix(self):
