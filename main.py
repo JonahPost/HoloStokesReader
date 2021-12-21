@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
 
-#  Fill in the filenames of the data you want to use. Make sure it is in the data folder.
+##  Fill in the filenames of the data you want to use. Make sure it is in the data folder.
 EMD_fname = "EMD_T_A_G=0.1000_full.txt"
 RN_fname = "RN_A_T_B0.0000_P0.1000_full.txt"
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         print(dataset.model)
         physics.calc_properties(dataset)
 
-    # masks
+    ## masks
     Anot0_emd = (EMD.lattice_amplitude != 0)
     Acutoff_emd = (EMD.lattice_amplitude > 0.02001)
     Tcutoff_emd = (EMD.temperature > 0.0199)
@@ -82,31 +82,31 @@ if __name__ == '__main__':
 
 
     def plot_gammaL(save=False):
-        fig_sigma = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_sigma", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
-        fig_alpha = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_alpha", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
-        fig_kappabar = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_kappabar", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd)
-        fig_sigma.ax1.set_ylim(ymax=0.0075)
-        fig_alpha.ax1.set_ylim(ymax=0.0075)
-        fig_kappabar.ax1.set_ylim(ymax=0.0075)
+        fig_sigma = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_sigma", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+        fig_alpha = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_alpha", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+        fig_kappabar = QuantityQuantityPlot("lattice_amplitude", "gamma_L_from_kappabar", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+        # fig_sigma.ax1.set_ylim(ymax=0.0075)
+        # fig_alpha.ax1.set_ylim(ymax=0.0075)
+        # fig_kappabar.ax1.set_ylim(ymax=0.0075)
         fig1 = QuantityQuantityPlot("lattice_amplitude", "gamma_reldiff_sigma_alpha", EMD,
                                     quantity_multi_line="temperature",
                                     mask1=Tcutoff_emd * Anot0_emd)
         fig2 = QuantityQuantityPlot("lattice_amplitude", "gamma_reldiff_sigma_kappabar", EMD,
                                     quantity_multi_line="temperature",
                                     mask1=Tcutoff_emd * Anot0_emd)
-        fig1.ax1.set_ylim(-.01, .9)
-        fig2.ax1.set_ylim(-.01, .9)
+        fig1.ax1.set_ylim(-1, 1)
+        fig2.ax1.set_ylim(-1, 1)
         fig3 = QuantityQuantityPlot("lattice_amplitude", "gamma_reldiff_sigma_alpha", RN,
                                     quantity_multi_line="temperature",
                                     mask1=Tcutoff_rn * Anot0_rn)
         fig4 = QuantityQuantityPlot("lattice_amplitude", "gamma_reldiff_sigma_kappabar", RN,
                                     quantity_multi_line="temperature",
                                     mask1=Tcutoff_rn * Anot0_rn)
-        fig3.ax1.set_ylim(-.05, .025)
-        fig4.ax1.set_ylim(-.05, .025)
+        fig3.ax1.set_ylim(-.4, .025)
+        fig4.ax1.set_ylim(-.4, .025)
         if save:
             plots_list = [fig_sigma, fig_alpha, fig_kappabar, fig1, fig2, fig3, fig4]
             IO_utils.save(plots_list)
@@ -127,6 +127,9 @@ if __name__ == '__main__':
 
 
     def plot_conductivities(save=False):
+        sigmaplot = QuantityQuantityPlot("temperature", "conductivity_xx", EMD,
+                                         quantity_multi_line="lattice_amplitude",
+                                         mask1=Anot0_emd)
         alphaplot = QuantityQuantityPlot("temperature", "alpha_xx", EMD,
                                          quantity_multi_line="lattice_amplitude",
                                          mask1=Anot0_emd)
@@ -134,7 +137,7 @@ if __name__ == '__main__':
                                             quantity_multi_line="lattice_amplitude",
                                             mask1=Anot0_emd)
         if save:
-            IO_utils.save([alphaplot, kappabarplot])
+            IO_utils.save([sigmaplot, alphaplot, kappabarplot])
 
 
     def plot_wf_ratio(save=False):
@@ -165,30 +168,51 @@ if __name__ == '__main__':
         return
 
     def plot_sigmaQ(save=False):
-        fig0 = QuantityQuantityPlot("lattice_amplitude", "conductivity_xx", EMD,
-                                    quantity_multi_line="temperature", mask1=(EMD.lattice_amplitude > 0.02001))
-        fig1 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_sigma_alpha", EMD,
-                                    quantity_multi_line="temperature", mask1=Anot0_emd)
-        fig2 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_sigma_kappabar", EMD,
-                                    quantity_multi_line="temperature", mask1=Anot0_emd)
-        fig3 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_alpha_kappabar", EMD,
-                                    quantity_multi_line="temperature", mask1=Anot0_emd)
+        fig1 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_sigma_alpha", EMD, RN,
+                                    quantity_multi_line="temperature", mask1=Anot0_emd, mask2=Anot0_rn)
+        fig2 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_sigma_kappabar", EMD, RN,
+                                    quantity_multi_line="temperature", mask1=Anot0_emd, mask2=Anot0_rn)
+        fig3 = QuantityQuantityPlot("lattice_amplitude", "sigmaQ_from_alpha_kappabar", EMD, RN,
+                                    quantity_multi_line="temperature", mask1=Anot0_emd, mask2=Anot0_rn)
+        fig1 = QuantityQuantityPlot("temperature", "sigmaQ_from_sigma_alpha", EMD, RN,
+                                    quantity_multi_line="lattice_amplitude", mask1=Anot0_emd, mask2=Anot0_rn)
+        fig2 = QuantityQuantityPlot("temperature", "sigmaQ_from_sigma_kappabar", EMD, RN,
+                                    quantity_multi_line="lattice_amplitude", mask1=Anot0_emd, mask2=Anot0_rn)
+        fig3 = QuantityQuantityPlot("temperature", "sigmaQ_from_alpha_kappabar", EMD, RN,
+                                    quantity_multi_line="lattice_amplitude", mask1=Anot0_emd, mask2=Anot0_rn)
         if save:
             IO_utils.save([fig0, fig1, fig2, fig3])
         return
 
     def plot_drude_weight(save=False):
-        fig1 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_energy_pressure", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
-        fig2 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_temperature_entropy", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
-        fig3 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_A0_from_energy_pressure", EMD,
-                             quantity_multi_line="temperature", mask1=Tcutoff_emd)
+        fig1 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_energy_pressure", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
+        fig2 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_from_temperature_entropy", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
+        fig3 = QuantityQuantityPlot("lattice_amplitude", "drude_weight_A0_from_energy_pressure", EMD, RN,
+                             quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
         fig1.ax1.set_ylim(ymax=1.6)
         fig2.ax1.set_ylim(ymax=1.6)
         fig3.ax1.set_ylim(ymax=1.6)
         if save:
             IO_utils.save([fig1, fig2, fig3])
+        return
+
+    def plot_shear_length(save=False):
+        fig1 = QuantityQuantityPlot("lattice_amplitude", "shear_length", EMD, quantity_multi_line="temperature",
+                                    mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+        fig2 = QuantityQuantityPlot("lattice_amplitude", "shear_length", RN, quantity_multi_line="temperature",
+                                    mask1=Tcutoff_rn * Anot0_rn)
+        fig1.ax1.set_ylim(ymax=510)
+        fig2.ax1.set_ylim(ymax=510)
+        fig3 = QuantityQuantityPlot("temperature", "shear_length", EMD, quantity_multi_line="lattice_amplitude",
+                                    mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+        fig4 = QuantityQuantityPlot("temperature", "shear_length", RN, quantity_multi_line="lattice_amplitude",
+                                    mask1=Tcutoff_rn * Anot0_rn)
+        fig3.ax1.set_ylim(ymax=510)
+        fig4.ax1.set_ylim(ymax=510)
+        if save:
+            IO_utils.save([fig1, fig2, fig3, fig4])
         return
 
     # plot_energy_pressure()
@@ -197,15 +221,45 @@ if __name__ == '__main__':
     # plot_conductivities()
     # plot_wf_ratio()
     # plot_EoS()
+    # RN = None
+    # RN = None
     # plot_sigmaQ()
     # plot_drude_weight()
+    plot_shear_length(True)
     # print(np.max(EMD.drude_weight_A0_from_temperature_entropy - EMD.drude_weight_A0_from_energy_pressure))
+    # QuantityQuantityPlot("lattice_amplitude", "charge_density", EMD, RN, quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
+    # QuantityQuantityPlot("lattice_amplitude", "entropy", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd, mask2=Tcutoff_rn)
+    # QuantityQuantityPlot("lattice_amplitude", "charge_density", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd, mask2=Tcutoff_rn)
 
-    # QuantityQuantityPlot("lattice_amplitude", "entropy", RN, quantity_multi_line="temperature", mask1=Tcutoff_rn)
-    figlist = [
-        QuantityQuantityPlot("lattice_amplitude", "charge_density", EMD, RN, quantity_multi_line="temperature", mask1=Tcutoff_emd, mask2=Tcutoff_rn)
-        ]
-    IO_utils.save(figlist)
+    # QuantityQuantityPlot("lattice_amplitude", "drudeweight_over_rho", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd, mask2=Tcutoff_rn)
+    # QuantityQuantityPlot("lattice_amplitude", "charge_density", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd, mask2=Tcutoff_rn)
+
+    # QuantityQuantityPlot("lattice_amplitude", "alpha_over_sigma", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn*Anot0_rn)
+    # QuantityQuantityPlot("lattice_amplitude", "kappabar_over_sigma", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn*Anot0_rn)
+    # QuantityQuantityPlot("lattice_amplitude", "kappabar_over_T_sigma", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn*Anot0_rn)
+
+    # QuantityQuantityPlot("lattice_amplitude", "entropy", EMD, RN, quantity_multi_line="temperature", mask1= Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn*Anot0_rn)
+
+    # figlist = [
+    #     QuantityQuantityPlot("lattice_amplitude", "conductivity_xx", EMD, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn*Anot0_rn),
+    #     QuantityQuantityPlot("lattice_amplitude", "sigmaDC_from_amplitude", EMD, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn),
+    #     QuantityQuantityPlot("lattice_amplitude", "sigmaDC_ratio", EMD, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn),
+    #     QuantityQuantityPlot("temperature", "sigmaDC_ratio", EMD, RN, quantity_multi_line="lattice_amplitude",
+    #                          mask1=Tcutoff_emd*Anot0_emd, mask2=Tcutoff_rn),
+    #     QuantityQuantityPlot("lattice_amplitude", "conductivity_xx", EMD, RN, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn),
+    #     QuantityQuantityPlot("lattice_amplitude", "sigmaDC_from_amplitude", EMD, RN, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn),
+    #     QuantityQuantityPlot("lattice_amplitude", "sigmaDC_ratio", EMD, RN, quantity_multi_line="temperature",
+    #                          mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn),
+    #     QuantityQuantityPlot("temperature", "sigmaDC_ratio", EMD, RN, quantity_multi_line="lattice_amplitude",
+    #                          mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn)
+    #
+    #     ]
+    # IO_utils.save(figlist)
     # d = pd.DataFrame(d={'T': EMD.temperature, 'A': EMD.lattice_amplitude, 'plasmon_frequency_squared': EMD.plasmon_frequency_squared})
     print("plots are build")
     plt.show()

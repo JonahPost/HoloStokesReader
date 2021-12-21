@@ -47,9 +47,32 @@ class QuantityQuantityPlot:
         loglog: bool
             Boolean value for whether or not to make the plots on a loglog scale.
         """
-        self.dict = {"temperature": "T",
-                     "periodicity": "G",
-                     "lattice_amplitude": "A"}
+        self.long_dict = {
+            "temperature": "Temperature",
+            "periodicity": "Periodicity",
+            "lattice_amplitude": "Amplitude",
+            "entropy": "Entropy"
+            }
+        self.short_dict = {
+            "temperature": "T",
+            "periodicity": "G",
+            "lattice_amplitude": "A",
+            "entropy": "S",
+            "charge_density": r"$\rho$",
+            "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
+            "gamma_L_from_alpha": r"$\Gamma_{L,\alpha}$",
+            "gamma_L_from_kappabar": r"$\Gamma_{L,\bar{\kappa}}$",
+            "drude_weight_from_energy_pressure": r"$\omega_p^2$",
+            "drude_weight_from_temperature_entropy": r"$\omega_p^2$",
+            "drude_weight_A0": r"$\omega_p^2$",
+            "sigma_xx": r"$\sigma$",
+            "alpha_xx": r"$\alpha$",
+            "kappabar_xx": r"$\bar{kappa}$",
+            "sigmaQ_from_sigma_alpha": r"$\sigma_Q$",
+            "sigmaQ_from_sigma_kappabar": r"$\sigma_Q$",
+            "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
+            "shear_length": r"$\ell_{\eta}$"
+        }
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
         self.model_1 = model_1
@@ -72,15 +95,18 @@ class QuantityQuantityPlot:
                 self.multiline_data2 = getattr(self.model_2, self.quantity_multi_line)[self.mask2]
 
         # Initialize figure
-        figure_size = (10, 6)
+        figure_size = (8, 5)
         self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
 
         self.compute_title_prefix()
         self.compute_title_appendix()
         self.title1 = self.title_prefix + f"{y_quantity_name} vs {x_quantity_name}" + self.title_appendix
         self.ax1.set_title(self.title1)
-        self.ax1.set_ylabel(y_quantity_name)
-        self.ax1.set_xlabel(self.dict[self.x_quantity_name])
+        if y_quantity_name in self.short_dict.keys():
+            self.ax1.set_ylabel(self.short_dict[y_quantity_name], rotation=0, fontsize=16)
+        else:
+            self.ax1.set_ylabel(y_quantity_name)
+        self.ax1.set_xlabel(self.long_dict[self.x_quantity_name])
         if logx:
             self.ax1.set_xscale("log")
         if logy:
@@ -89,7 +115,7 @@ class QuantityQuantityPlot:
             self.fig_exp, self.ax_exp = plt.subplots(1, 1, figsize=figure_size)
             self.ax_exp.grid()
             self.ax_exp.set_ylabel("exponent")
-            self.ax_exp.set_xlabel(self.dict[self.x_quantity_name])
+            self.ax_exp.set_xlabel(self.long_dict[self.x_quantity_name])
             self.ax_exp.set_title(
                 f"{self.model_1.model}: {self.y_quantity_name} exponent" + self.title_appendix)
         self.plot_lines()
@@ -106,7 +132,7 @@ class QuantityQuantityPlot:
             for i, quantity_value in enumerate(np.unique(self.multiline_data1)):
                 mask = (self.multiline_data1 == quantity_value)
                 x, y = utils.sort(self.xdata1[mask], self.ydata1[mask])
-                line_label = self.dict[self.quantity_multi_line] + "=" + str(quantity_value)
+                line_label = self.short_dict[self.quantity_multi_line] + "=" + str(quantity_value)
                 line_color = self.cmap1.to_rgba(quantity_value)
                 self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
                 if self.exponential:
@@ -120,22 +146,22 @@ class QuantityQuantityPlot:
                 for i, quantity_value in enumerate(np.unique(self.multiline_data2)):
                     mask = (self.multiline_data2 == quantity_value)
                     x2, y2 = utils.sort(self.xdata2[mask], self.ydata2[mask])
-                    line_label = self.dict[self.quantity_multi_line] + "=" + str(quantity_value)
+                    line_label = self.short_dict[self.quantity_multi_line] + "=" + str(quantity_value)
                     line_color = self.cmap2.to_rgba(quantity_value)
                     self.ax1.plot(x2, y2, "-x", label=self.label_prefix2 + line_label, c=line_color)
                     if self.exponential:
                         self.ax_exp.plot(x2, np.gradient(np.log(y2), x2) * x2, "-x",
                                          label=self.label_prefix2 + line_label, c=line_color)
                 self.cbar2 = self.fig.colorbar(self.cmap2, ax=self.ax1)
-                self.cbar2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
+                self.cbar2.set_label(self.label_prefix2 + self.long_dict[self.quantity_multi_line])
                 if self.exponential:
                     self.cbarexp2 = self.fig.colorbar(self.cmap2, ax=self.ax_exp)
                     self.cbarexp2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
             self.cbar1 = self.fig.colorbar(self.cmap1, ax=self.ax1)
-            self.cbar1.set_label(self.label_prefix1 + self.dict[self.quantity_multi_line])
+            self.cbar1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
             if self.exponential:
                 self.cbarexp1 = self.fig.colorbar(self.cmap1, ax=self.ax_exp)
-                self.cbarexp1.set_label(self.label_prefix1 + self.dict[self.quantity_multi_line])
+                self.cbarexp1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
             if self.polynomial:
                 self.cbar1.remove()
                 if self.model_2 is not None:
@@ -166,7 +192,7 @@ class QuantityQuantityPlot:
             other_x_quantities.remove(self.quantity_multi_line)
         self.title_appendix = ""
         for quantity in other_x_quantities:
-            self.title_appendix += f" {self.dict[quantity]}={getattr(self.model_1, quantity)[0]:.2f}"
+            self.title_appendix += f" {self.short_dict[quantity]}={getattr(self.model_1, quantity)[0]:.2f}"
 
     def compute_title_prefix(self):
         if self.model_2 is not None:
