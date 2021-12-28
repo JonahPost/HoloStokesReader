@@ -53,6 +53,7 @@ class DataSet():
         self.data = self.data.sort_values(by=[self.lattice_amplitude_key, "T"])
         self.periodicity = self.data[self.periodicity_key].to_numpy()
         self.lattice_amplitude = self.data[self.lattice_amplitude_key].to_numpy()
+        self.one_over_A = 1/self.lattice_amplitude
         self.temperature = self.data["T"].to_numpy()
         self.conductivity_xx = self.data["SigmaE11"].to_numpy()  # electrical conductivity
         self.conductivity_xy = self.data["SigmaE12"].to_numpy()

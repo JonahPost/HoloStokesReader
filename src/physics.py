@@ -52,6 +52,7 @@ def calc_properties(model):
     compute_entropy_A0(model)
     compute_charge_density_A0(model)
     model.shear_length = np. sqrt(model.entropy_A0 * model.conductivity_xx / ( 4*np.pi*(model.charge_density_A0**2) ))
+    model.one_over_shear_length = 1/model.shear_length
 
 def compute_drude_weight_A0(model):
     maskA0 = (model.lattice_amplitude == 0)

@@ -51,12 +51,14 @@ class QuantityQuantityPlot:
             "temperature": "Temperature",
             "periodicity": "Periodicity",
             "lattice_amplitude": "Amplitude",
+            "one_over_A": "1/Amplitude",
             "entropy": "Entropy"
             }
         self.short_dict = {
             "temperature": "T",
             "periodicity": "G",
             "lattice_amplitude": "A",
+            "one_over_A": r"$\frac{1}{A}$",
             "entropy": "S",
             "charge_density": r"$\rho$",
             "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
@@ -71,7 +73,8 @@ class QuantityQuantityPlot:
             "sigmaQ_from_sigma_alpha": r"$\sigma_Q$",
             "sigmaQ_from_sigma_kappabar": r"$\sigma_Q$",
             "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
-            "shear_length": r"$\ell_{\eta}$"
+            "shear_length": r"$\ell_{\eta}$",
+            "one_over_shear_length": r"$q_{\eta}=\frac{1}{\ell_{\eta}}$"
         }
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
@@ -187,6 +190,8 @@ class QuantityQuantityPlot:
 
     def compute_title_appendix(self):
         other_x_quantities = ["temperature", "periodicity", "lattice_amplitude"]
+        if self.x_quantity_name == "one_over_A":
+            other_x_quantities = ["temperature", "periodicity", "one_over_A"]
         other_x_quantities.remove(self.x_quantity_name)
         if self.quantity_multi_line is not None:
             other_x_quantities.remove(self.quantity_multi_line)
