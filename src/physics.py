@@ -34,6 +34,7 @@ def calc_properties(model):
     model.energy_pressure_ratio = model.energy / model.pressure
     model.one_over_mu = 1 / model.chem_pot
     model.resistivity_xx = 1 / model.conductivity_xx
+    model.resistivity_over_T = model.resistivity_xx / model.temperature
     model.sigmaDC_from_amplitude = np.sqrt(3) * ( 1 + model.lattice_amplitude**2 )**2 / ( 2*np.pi*(model.lattice_amplitude**2)*np.sqrt(4 + 6*(model.lattice_amplitude**2)) * model.temperature)
     model.sigmaDC_ratio = model.conductivity_xx/model.sigmaDC_from_amplitude
     ## Wiedermann-Franz ratio

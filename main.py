@@ -17,8 +17,15 @@ import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
 
 ##  Fill in the filenames of the data you want to use. Make sure it is in the data folder.
+
 EMD_fname = "EMD_T_A_G=0.1000_full.txt"
+# EMD_2Dfname = "EMD_T=0.0500_A_G=0.1000.txt"
+# EMD_1Dfname = "Unidir_T0.05_G0.1.txt"
 RN_fname = "RN_A_T_B0.0000_P0.1000_full.txt"
+
+# EMD_fname = "EMD_T_A_G=0.1000.txt"
+
+# EMD_fname = EMD_1Dfname
 
 path = "data/"
 
@@ -33,10 +40,10 @@ if __name__ == '__main__':
     ## masks
     Anot0_emd = (EMD.lattice_amplitude != 0)
     Acutoff_emd = (EMD.lattice_amplitude > 0.02001)
-    Tcutoff_emd = (EMD.temperature > 0.0199)
+    Tcutoff_emd = (EMD.temperature > 0.0099)
     Anot0_rn = (RN.lattice_amplitude != 0)
     Acutoff_rn = (RN.lattice_amplitude > 0.02001)
-    Tcutoff_rn = (RN.temperature > 0.0199)
+    Tcutoff_rn = (RN.temperature > 0.0099)
 
 
     def func(x, a1, a2):
@@ -61,20 +68,21 @@ if __name__ == '__main__':
                                        mask1=Tcutoff_emd, mask2=Tcutoff_rn)
         resfig2 = QuantityQuantityPlot("temperature", "resistivity_xx", EMD,
                                        quantity_multi_line="lattice_amplitude",
-                                       mask1=Tcutoff_emd, polynomial=True)
+                                       mask1=Tcutoff_emd)
         resfig3 = QuantityQuantityPlot("lattice_amplitude", "resistivity_xx", EMD, RN,
                                        quantity_multi_line="temperature",
-                                       mask1=Tcutoff_emd, mask2=Tcutoff_rn, exponential=False)
-        resfig4 = QuantityQuantityPlot("lattice_amplitude", "resistivity_xx", EMD, quantity_multi_line="temperature",
+                                       mask1=Tcutoff_emd, mask2=Tcutoff_rn,)
+        resfig4 = QuantityQuantityPlot("lattice_amplitude", "resistivity_xx", EMD,
+                                       quantity_multi_line="temperature",
                                        mask1=Tcutoff_emd)
-        T0_02mask = (EMD.temperature < 0.0201) * (EMD.temperature > 0.0199)
-        T0_03mask = (EMD.temperature < 0.0301) * (EMD.temperature > 0.0299)
-        T0_04mask = (EMD.temperature < 0.0401) * (EMD.temperature > 0.0399)
-        T0_05mask = (EMD.temperature < 0.0501) * (EMD.temperature > 0.0499)
-        mask_fit(T0_02mask, resfig4)
-        mask_fit(T0_03mask, resfig4)
-        mask_fit(T0_04mask, resfig4)
-        mask_fit(T0_05mask, resfig4)
+        # T0_02mask = (EMD.temperature < 0.0201) * (EMD.temperature > 0.0199)
+        # T0_03mask = (EMD.temperature < 0.0301) * (EMD.temperature > 0.0299)
+        # T0_04mask = (EMD.temperature < 0.0401) * (EMD.temperature > 0.0399)
+        # T0_05mask = (EMD.temperature < 0.0501) * (EMD.temperature > 0.0499)
+        # mask_fit(T0_02mask, resfig4)
+        # mask_fit(T0_03mask, resfig4)
+        # mask_fit(T0_04mask, resfig4)
+        # mask_fit(T0_05mask, resfig4)
         if save:
             plots_list = [resfig1, resfig2, resfig3, resfig4]
             IO_utils.save(plots_list)
@@ -201,18 +209,19 @@ if __name__ == '__main__':
     def plot_shear_length(save=False):
         fig1 = QuantityQuantityPlot("lattice_amplitude", "one_over_shear_length", EMD, quantity_multi_line="temperature",
                                     mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
-        fig2 = QuantityQuantityPlot("lattice_amplitude", "one_over_shear_length", RN, quantity_multi_line="temperature",
-                                    mask1=Tcutoff_rn * Anot0_rn)
+        fig1.ax1.plot(EMD.lattice_amplitude, EMD.one_over_mu)
+        # fig2 = QuantityQuantityPlot("lattice_amplitude", "one_over_shear_length", RN, quantity_multi_line="temperature",
+        #                             mask1=Tcutoff_rn * Anot0_rn)
         # fig1.ax1.set_ylim(ymax=510)
         # fig2.ax1.set_ylim(ymax=510)
         fig3 = QuantityQuantityPlot("temperature", "one_over_shear_length", EMD, quantity_multi_line="lattice_amplitude",
                                     mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
-        fig4 = QuantityQuantityPlot("temperature", "one_over_shear_length", RN, quantity_multi_line="lattice_amplitude",
-                                    mask1=Tcutoff_rn * Anot0_rn)
+        # fig4 = QuantityQuantityPlot("temperature", "one_over_shear_length", RN, quantity_multi_line="lattice_amplitude",
+        #                             mask1=Tcutoff_rn * Anot0_rn)
         # fig3.ax1.set_ylim(ymax=510)
         # fig4.ax1.set_ylim(ymax=510)
         if save:
-            IO_utils.save([fig1, fig2, fig3, fig4])
+            pass # IO_utils.save([fig1, fig2, fig3, fig4])
         return
 
     # plot_energy_pressure()
@@ -228,8 +237,13 @@ if __name__ == '__main__':
     # plot_shear_length()
     # print(np.max(EMD.drude_weight_A0_from_temperature_entropy - EMD.drude_weight_A0_from_energy_pressure))
 
-    QuantityQuantityPlot("one_over_A", "shear_length", EMD, quantity_multi_line="temperature",
-                         mask1=Tcutoff_emd * Anot0_emd, mask2=Tcutoff_rn * Anot0_rn)
+    resfig1 = QuantityQuantityPlot("temperature", "resistivity_over_T", EMD, quantity_multi_line="lattice_amplitude",
+                                   mask1=Tcutoff_emd, mask2=Tcutoff_rn)
+    resfig1.ax1.set_ylim(ymin=0, ymax=0.6)
+
+    # highAmask = (EMD.lattice_amplitude > 0.2)
+    # QuantityQuantityPlot("one_over_A", "shear_length", EMD, quantity_multi_line="temperature",
+    #                      mask1=highAmask * Anot0_emd, polynomial=True)
 
     # figlist = []
     # IO_utils.save(figlist)

@@ -6,9 +6,12 @@ Created on Wed Nov 17 14:11:07 2021
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import matplotlib as mpl
 import numpy as np
 import src.utils as utils
+# plt.style.reload_library()
+plt.style.use(['science','ieee','no-latex'])
 
 
 class QuantityQuantityPlot:
@@ -17,7 +20,7 @@ class QuantityQuantityPlot:
     """
 
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
-                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix=""):
+                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True):
         # exponential and polynomial will only be fit to model_1
         # What happen when both model_2 and multi_line are on?
         """"
@@ -48,18 +51,18 @@ class QuantityQuantityPlot:
             Boolean value for whether or not to make the plots on a loglog scale.
         """
         self.long_dict = {
-            "temperature": "Temperature",
+            "temperature": r"$T (\mu)$",
             "periodicity": "Periodicity",
             "lattice_amplitude": "Amplitude",
             "one_over_A": "1/Amplitude",
             "entropy": "Entropy"
             }
         self.short_dict = {
-            "temperature": "T",
-            "periodicity": "G",
-            "lattice_amplitude": "A",
+            "temperature": r"$T$",
+            "periodicity": r"$G$",
+            "lattice_amplitude": r"$A$",
             "one_over_A": r"$\frac{1}{A}$",
-            "entropy": "S",
+            "entropy": r"$S$",
             "charge_density": r"$\rho$",
             "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
             "gamma_L_from_alpha": r"$\Gamma_{L,\alpha}$",
@@ -74,8 +77,10 @@ class QuantityQuantityPlot:
             "sigmaQ_from_sigma_kappabar": r"$\sigma_Q$",
             "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
             "shear_length": r"$\ell_{\eta}$",
-            "one_over_shear_length": r"$q_{\eta}=\frac{1}{\ell_{\eta}}$"
+            "one_over_shear_length": r"$q_{\eta}=\frac{1}{\ell_{\eta}}$",
+            "resistivity_over_T": r"$\rho/T$"
         }
+        self.scienceplot=scienceplot
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
         self.model_1 = model_1
@@ -99,17 +104,26 @@ class QuantityQuantityPlot:
 
         # Initialize figure
         figure_size = (8, 5)
-        self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
+        # self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
+        # self.fig, self.ax1 = plt.subplots(1, 1)
+        self.fig = plt.figure()
+        self.ax1 = self.fig.add_axes([0, 0, 1, 1])
 
         self.compute_title_prefix()
         self.compute_title_appendix()
-        self.title1 = self.title_prefix + f"{y_quantity_name} vs {x_quantity_name}" + self.title_appendix
-        self.ax1.set_title(self.title1)
+        self.title1 = (self.title_prefix + f"{y_quantity_name} vs {x_quantity_name}" + self.title_appendix).replace("_", " ")
+        if not scienceplot:
+            self.ax1.set_title(self.title1)
+        if scienceplot:
+            self.ax1.text(.95,.95, self.title_appendix,
+                    horizontalalignment='right',
+                    verticalalignment='top',
+                    transform=self.ax1.transAxes)
         if y_quantity_name in self.short_dict.keys():
-            self.ax1.set_ylabel(self.short_dict[y_quantity_name], rotation=0, fontsize=16)
+            self.ax1.set_ylabel(self.short_dict[y_quantity_name].replace("_", " "))
         else:
-            self.ax1.set_ylabel(y_quantity_name)
-        self.ax1.set_xlabel(self.long_dict[self.x_quantity_name])
+            self.ax1.set_ylabel(y_quantity_name.replace("_", " "))
+        self.ax1.set_xlabel(self.long_dict[self.x_quantity_name].replace("_", " "))
         if logx:
             self.ax1.set_xscale("log")
         if logy:
@@ -122,7 +136,7 @@ class QuantityQuantityPlot:
             self.ax_exp.set_title(
                 f"{self.model_1.model}: {self.y_quantity_name} exponent" + self.title_appendix)
         self.plot_lines()
-        self.fig.tight_layout()
+        # self.fig.tight_layout()
         if self.exponential:
             self.fig_exp.tight_layout()
 
@@ -137,14 +151,18 @@ class QuantityQuantityPlot:
                 x, y = utils.sort(self.xdata1[mask], self.ydata1[mask])
                 line_label = self.short_dict[self.quantity_multi_line] + "=" + str(quantity_value)
                 line_color = self.cmap1.to_rgba(quantity_value)
-                self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
+                if self.scienceplot:
+                    self.ax1.plot(x, y, "-", label=self.label_prefix1 + line_label, c=line_color)
+                else:
+                    self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
                 if self.exponential:
                     self.ax_exp.plot(x, np.gradient(np.log(y), x) * x, "-x",
                                      label=self.label_prefix1 + line_label, c=line_color)
                 if self.polynomial:
                     popt, pol = utils.pol_fit(x, y)
-                    xrange = np.linspace(x[0], x[-1])
-                    self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}$x$+{:.2g}$x^2$".format(*popt), c="k")
+                    xrange = np.linspace(0, x[-1])
+                    # self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}$x$+{:.2g}$x^2$".format(*popt), c="k")
+                    self.ax1.plot(xrange, pol(xrange), "--", label=r"{:.2g}+{:.2g}$x$".format(*popt), c="k")
             if self.model_2 is not None:
                 for i, quantity_value in enumerate(np.unique(self.multiline_data2)):
                     mask = (self.multiline_data2 == quantity_value)
@@ -160,6 +178,7 @@ class QuantityQuantityPlot:
                 if self.exponential:
                     self.cbarexp2 = self.fig.colorbar(self.cmap2, ax=self.ax_exp)
                     self.cbarexp2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
+
             self.cbar1 = self.fig.colorbar(self.cmap1, ax=self.ax1)
             self.cbar1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
             if self.exponential:
@@ -186,7 +205,8 @@ class QuantityQuantityPlot:
             self.ax1.legend()
         if not any(self.ydata1 < 0):
             self.ax1.set_ylim(ymin=0)
-        self.ax1.grid()
+        self.ax1.set_xlim(xmin=0)
+        # self.ax1.grid()
 
     def compute_title_appendix(self):
         other_x_quantities = ["temperature", "periodicity", "lattice_amplitude"]

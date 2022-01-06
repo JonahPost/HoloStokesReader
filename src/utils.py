@@ -68,8 +68,14 @@ class DataSet():
         self.energy = -self.data["Ttt"].to_numpy()  # energy stress tensor
         self.pressure = self.data["Txx"].to_numpy()
         self.pressurediffxxyy = self.data["Txx"].to_numpy() - self.data["Tyy"].to_numpy()
-        self.free_energy = self.data[self.free_energy_key].to_numpy()
-        self.internal_energy = self.data[self.internal_energy_key].to_numpy()
+        try:
+            self.free_energy = self.data[self.free_energy_key].to_numpy()
+        except:
+            pass
+        try:
+            self.internal_energy = self.data[self.internal_energy_key].to_numpy()
+        except:
+            pass
         self.charge_density = self.data["rho"].to_numpy()
         self.chem_pot = self.data[self.chem_pot_key].to_numpy()
         # self.black_hole_charge = self.data["Q"].to_numpy()
@@ -119,9 +125,11 @@ class DataSet():
         rho = self.charge_density
         return( (rho/(s*T))*kappabar - alpha) / ( (rho/(T**2 * s)) + (1/T) )
 
-def polynomial(x, a2, a1):
-    return a2 * (x**2) + a1 * x
+# def polynomial(x, a2, a1):
+#     return a2 * (x**2) + a1 * x
 
+def polynomial(x, a2, a1, a0):
+    return a2 * (x**2) + a1 * x + a0
 
 def pol_fit(x, y):
     """"
@@ -130,8 +138,9 @@ def pol_fit(x, y):
     x_finite, y_finite = remove_nan(x,y)
     popt, pcov = curve_fit(polynomial, x_finite, y_finite)
     # popt, pcov = curve_fit(polynomial, x_finite, y_finite)
-    pol = np.poly1d(np.append(popt,0))
-    return popt, pol
+    # pol = np.poly1d(np.append(popt,0))
+    pol = np.poly1d(popt)
+    return np.flip(popt), pol
 
 def remove_nan(x,y):
     finite_mask_x = np.isfinite(x)
