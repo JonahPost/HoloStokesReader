@@ -22,7 +22,7 @@ import examples.planckianuniversalityplot as plankianuniversality
 
 plt.style.use(['science','ieee','no-latex'])
 
-matplotlib.mathtext.SHRINK_FACTOR = 0.2
+# matplotlib.mathtext.SHRINK_FACTOR = 0.2
 rcParams['font.family'] = 'DeJavu Sans'
 rcParams['font.sans-serif'] = ['Helvetica']
 

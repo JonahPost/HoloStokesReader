@@ -19,7 +19,7 @@ class QuantityQuantityPlot:
     """
 
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
-                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, cbar=True, ax= None, figure=None):
+                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, cbar=True):
         # exponential and polynomial will only be fit to model_1
         # What happen when both model_2 and multi_line are on?
         """"
@@ -83,8 +83,6 @@ class QuantityQuantityPlot:
             "conductivity_xx": r"$\sigma_{xx}$"
         }
         self.scienceplot = scienceplot
-        self.ax = ax
-        self.fig = figure
         self.linelabels = linelabels
         self.cbar = cbar
         self.x_quantity_name = x_quantity_name
@@ -109,13 +107,11 @@ class QuantityQuantityPlot:
                 self.multiline_data2 = getattr(self.model_2, self.quantity_multi_line)[self.mask2]
 
         # Initialize figure
-        if self.ax is not None:
-            self.ax1 = self.ax
-            if self.fig is None:
-                raise Exception("If you give ax, you must also also give fig")
-        else:
-            figure_size = (4, 2)
-            self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
+        figure_size = (4, 2)
+        self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
+        # self.fig, self.ax1 = plt.subplots(1, 1)
+        # self.fig = plt.figure(figsize=figure_size)
+        # self.ax1 = self.fig.add_axes([0, 0, 1, 1])
 
         self.compute_title_prefix()
         self.compute_title_appendix()
@@ -128,10 +124,10 @@ class QuantityQuantityPlot:
                     verticalalignment='top',
                     transform=self.ax1.transAxes)
         if y_quantity_name in self.short_dict.keys():
-            self.ax1.set_ylabel(self.short_dict[y_quantity_name])
+            self.ax1.set_ylabel(self.short_dict[y_quantity_name].replace("_", " "))
         else:
-            self.ax1.set_ylabel(y_quantity_name)
-        self.ax1.set_xlabel(self.long_dict[self.x_quantity_name])
+            self.ax1.set_ylabel(y_quantity_name.replace("_", " "))
+        self.ax1.set_xlabel(self.long_dict[self.x_quantity_name].replace("_", " "))
         if logx:
             self.ax1.set_xscale("log")
         if logy:
@@ -144,6 +140,7 @@ class QuantityQuantityPlot:
             self.ax_exp.set_title(
                 f"{self.model_1.model}: {self.y_quantity_name} exponent" + self.title_appendix)
         self.plot_lines()
+        # self.fig.tight_layout()
         if self.exponential:
             self.fig_exp.tight_layout()
 
@@ -263,7 +260,7 @@ class QuantityQuantityPlot:
         if quantities.min() < 0:
             norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
         else:
-            norm1 = mpl.colors.Normalize(vmin=0, vmax=quantities.max())
+            norm1 = mpl.colors.Normalize(0, vmax=quantities.max())
         # self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
         self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.inferno.reversed())
         # if self.model_1.model == "RN" or self.model_1.model == "rn":
