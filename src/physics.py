@@ -8,7 +8,7 @@ import numpy as np
 
 def calc_properties(model):
     model.s_over_rho = model.entropy / model.charge_density
-    # compute_s_over_rho_A0(model)
+    # model.s_over_rho_A0 = compute_homogeneous_A0_value(model , "s_over_rho")
     model.rho_over_s = 1/model.s_over_rho
 
     model.kappa_xx = model.kappabar_xx - model.alpha_xx ** 2 * model.temperature / model.conductivity_xx
@@ -25,14 +25,17 @@ def calc_properties(model):
     model.drude_weight_from_temperature_entropy = \
         (model.charge_density ** 2 / (model.entropy * model.temperature + model.charge_density))
     # Also for A=0, A-independent weight
-    compute_drude_weight_A0(model)
+    # compute_drude_weight_A0(model)
 
     model.drudeweight_over_rho = model.drude_weight_from_temperature_entropy / model.charge_density
 
     ## Thermodynamics
+    model.energy_plus_pressure = model.energy + model.pressure
+    # model.energy_plus_pressure_A0 = compute_homogeneous_A0_value(model, "energy_plus_pressure")
     model.equation_of_state = model.energy + model.pressure - model.temperature * model.entropy - model.charge_density
     model.energy_pressure_ratio = model.energy / model.pressure
     model.one_over_mu = 1 / model.chem_pot
+    model.conductivity_T = model.conductivity_xx * model.temperature
     model.resistivity_xx = 1 / model.conductivity_xx
     model.resistivity_over_T = model.resistivity_xx / model.temperature
     model.sigmaDC_from_amplitude = np.sqrt(3) * ( 1 + model.lattice_amplitude**2 )**2 / ( 2*np.pi*(model.lattice_amplitude**2)*np.sqrt(4 + 6*(model.lattice_amplitude**2)) * model.temperature)
@@ -42,18 +45,22 @@ def calc_properties(model):
     model.wf_ratio = (model.kappabar_xx / (model.conductivity_xx * model.temperature))
 
     ## Gamma_L
-    compute_gamma_L(model, model.drude_weight_A0)
+    # compute_gamma_L(model, model.drude_weight_A0)
     ## Relative differences of Gamma_L
-    compute_gamma_differences(model)
+    # compute_gamma_differences(model)
 
     ## Sigma_Q
     compute_sigmaQ(model)
 
     ## Shear Length \ell_\eta
-    compute_entropy_A0(model)
-    compute_charge_density_A0(model)
-    model.shear_length = np. sqrt(model.entropy_A0 * model.conductivity_xx / ( 4*np.pi*(model.charge_density_A0**2) ))
-    model.one_over_shear_length = 1/model.shear_length
+    if model.model == "EMD":
+        model.entropy_A0 = compute_homogeneous_A0_value(model , "entropy")
+        model.charge_density_A0 = compute_homogeneous_A0_value(model, "charge_density")
+        model.shear_length = np. sqrt(model.entropy_A0 * model.conductivity_xx / ( 4*np.pi*(model.charge_density_A0**2) ))
+        model.one_over_shear_length = 1/model.shear_length
+        # model.conductivity_T_limit = model.drude_weight_A0_from_energy_pressure * 2 * np.pi**3
+        # model.conductivity_T_limit = model.temperature*4*np.pi* model.charge_density_A0**2 * (np.pi/np.sqrt(2))**2 / model.entropy_A0
+        model.conductivity_T_limit = model.temperature * 2 * (np.pi**3) * model.charge_density_A0 ** 2 / model.entropy_A0
 
 def compute_drude_weight_A0(model):
     maskA0 = (model.lattice_amplitude == 0)
@@ -94,25 +101,12 @@ def compute_sigmaQ(model):
     model.sigmaQ_from_alpha_kappabar = \
         ((rho_over_s / T) * kappabar - alpha) / ((rho_over_s / (T ** 2)) + (1 / T))
 
-def compute_charge_density_A0(model):
+def compute_homogeneous_A0_value(model , quantity_name):
     maskA0 = (model.lattice_amplitude == 0)
-    charge_density_A0 = model.charge_density[maskA0]
-    model.charge_density_A0 = np.copy(model.charge_density)
+    quantity_array = getattr(model, quantity_name)
+    homogeneous_single_array = quantity_array[maskA0]
+    homogeneous_full_array = np.copy(quantity_array)
     for A in np.unique(model.lattice_amplitude):
         maskA = (model.lattice_amplitude == A)
-        model.charge_density_A0[maskA] = charge_density_A0
-def compute_entropy_A0(model):
-    maskA0 = (model.lattice_amplitude == 0)
-    entropy_A0 = model.entropy[maskA0]
-    model.entropy_A0 = np.copy(model.entropy)
-    for A in np.unique(model.lattice_amplitude):
-        maskA = (model.lattice_amplitude == A)
-        model.entropy_A0[maskA] = entropy_A0
-
-def compute_s_over_rho_A0(model):
-    maskA0 = (model.lattice_amplitude == 0)
-    s_over_rho_A0 = model.s_over_rho[maskA0]
-    model.s_over_rho = np.copy(model.s_over_rho)
-    for A in np.unique(model.lattice_amplitude):
-        maskA = (model.lattice_amplitude == A)
-        model.s_over_rho[maskA] = s_over_rho_A0
+        homogeneous_full_array[maskA] = homogeneous_single_array
+    return homogeneous_full_array

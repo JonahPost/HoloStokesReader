@@ -128,17 +128,27 @@ class DataSet():
 # def polynomial(x, a2, a1):
 #     return a2 * (x**2) + a1 * x
 
-def polynomial(x, a2, a1, a0):
+def polynomial_quadratic(x, a2, a1, a0):
     return a2 * (x**2) + a1 * x + a0
 
-def pol_fit(x, y):
+def polynomial_linear(x, a1, a0):
+    return a1 * x + a0
+
+def pol_fit(x, y, type="linear"):
     """"
     Method to make a second order polynomial fit.
     """
     x_finite, y_finite = remove_nan(x,y)
-    popt, pcov = curve_fit(polynomial, x_finite, y_finite)
+    print(x_finite, y_finite)
+    if type == "linear":
+        popt, pcov = curve_fit(polynomial_linear, x_finite, y_finite)
+    elif type == "quadratic":
+        popt, pcov = curve_fit(polynomial_quadratic, x_finite, y_finite)
+    else:
+        raise Exception("specify fit type 'linear' or 'quadratic' ")
     # popt, pcov = curve_fit(polynomial, x_finite, y_finite)
     # pol = np.poly1d(np.append(popt,0))
+    print(popt)
     pol = np.poly1d(popt)
     return np.flip(popt), pol
 

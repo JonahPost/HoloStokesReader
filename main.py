@@ -13,23 +13,39 @@ import src.utils as utils
 from src.plot_utils import *
 import src.physics as physics
 import matplotlib.pyplot as plt
+import matplotlib
 import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
+from matplotlib import rcParams
+import examples.planckianuniversalityplot as plankianuniversality
+
+
+plt.style.use(['science','ieee','no-latex'])
+
+matplotlib.mathtext.SHRINK_FACTOR = 0.2
+rcParams['font.family'] = 'DeJavu Sans'
+rcParams['font.sans-serif'] = ['Helvetica']
 
 ##  Fill in the filenames of the data you want to use. Make sure it is in the data folder.
 
-EMD_fname = "EMD_T_A_G=0.1000_full.txt"
+# EMD_fname = "EMD_T_A_G=0.1000_full.txt"
 # EMD_2Dfname = "EMD_T=0.0500_A_G=0.1000.txt"
 # EMD_1Dfname = "Unidir_T0.05_G0.1.txt"
 RN_fname = "RN_A_T_B0.0000_P0.1000_full.txt"
 
+EMD_fname = "EMD_T_A_G=0.1000_3_zonderAhalf.txt"
 # EMD_fname = "EMD_T_A_G=0.1000.txt"
 
 # EMD_fname = EMD_1Dfname
 
 path = "data/"
 
+
+
+
 if __name__ == '__main__':
+    plankianuniversality.main()
+else:
     EMD = DataSet(model="EMD", fname=path + EMD_fname)
     RN = DataSet(model="RN", fname=path + RN_fname)
     print("Data is imported")
@@ -40,25 +56,29 @@ if __name__ == '__main__':
     ## masks
     Anot0_emd = (EMD.lattice_amplitude != 0)
     Acutoff_emd = (EMD.lattice_amplitude > 0.02001)
-    Tcutoff_emd = (EMD.temperature > 0.0099)
+    Tcutoff_emd = (EMD.temperature > 0.0199)
     Anot0_rn = (RN.lattice_amplitude != 0)
     Acutoff_rn = (RN.lattice_amplitude > 0.02001)
-    Tcutoff_rn = (RN.temperature > 0.0099)
+    Tcutoff_rn = (RN.temperature > 0.0199)
+
+    def func(x, a0, a1):
+        return a0 + a1 * x
 
 
-    def func(x, a1, a2):
-        return a1 * x + a2 * (x ** 2)
-
-
-    def mask_fit(mask, fig):
-        x = EMD.lattice_amplitude[mask]
-        y = EMD.resistivity_xx[mask]
+    def mask_fit(mask, fig, labelprefix, fit_xmax=None):
+        x = 1/EMD.lattice_amplitude[mask]
+        y = EMD.shear_length[mask]
         x, y = utils.remove_nan(x, y)
         x, y = utils.sort(x, y)
-        popt, pcov = curve_fit(func, x, y)
-        xrange = np.linspace(x[0], x[-1])
-        fig.ax1.plot(xrange, func(xrange, *popt), "--", c="k")
-        print(r"${:.2g}x+{:.2g}x^2$".format(*popt))
+        # popt, pcov = curve_fit(func, x, y)
+        popt, pol = utils.pol_fit(x, y, type="linear")
+        xmax = x[0]
+        if fit_xmax:
+            xmax = fit_xmax
+        xrange = np.linspace(0, xmax)
+        # fig.ax1.plot(xrange, pol(xrange), "--", label=labelprefix+r"{:.2g}+{:.2g}$(1/A)$".format(*popt), c="k")
+        fig.ax1.plot(xrange, pol(xrange), linestyle=(0, (1, 1)), c="k", linewidth=.5)
+        print(r"${:.2g}+{:.2g}x$".format(*popt))
         return
 
 
@@ -236,16 +256,54 @@ if __name__ == '__main__':
     # plot_drude_weight()
     # plot_shear_length()
     # print(np.max(EMD.drude_weight_A0_from_temperature_entropy - EMD.drude_weight_A0_from_energy_pressure))
+    # print((np.unique(EMD.lattice_amplitude)))
+    # print((np.unique(EMD.temperature)))
+    custom_mask = np.logical_not((EMD.lattice_amplitude < 0.81) * (EMD.lattice_amplitude > 0.79) * (EMD.temperature < 0.016)
+                                 + (EMD.lattice_amplitude < 1.01) * (EMD.lattice_amplitude > 0.99) * (EMD.temperature < 0.008)
+                                 )
+    # resfig1 = QuantityQuantityPlot("temperature", "resistivity_xx", EMD, quantity_multi_line="lattice_amplitude",
+    #                                mask1=Tcutoff_emd*custom_mask, mask2=Tcutoff_rn)
+    # resfig1.ax1.set_ylim(ymin=0, ymax=0.6)
 
-    resfig1 = QuantityQuantityPlot("temperature", "resistivity_over_T", EMD, quantity_multi_line="lattice_amplitude",
-                                   mask1=Tcutoff_emd, mask2=Tcutoff_rn)
-    resfig1.ax1.set_ylim(ymin=0, ymax=0.6)
 
-    # highAmask = (EMD.lattice_amplitude > 0.2)
-    # QuantityQuantityPlot("one_over_A", "shear_length", EMD, quantity_multi_line="temperature",
-    #                      mask1=highAmask * Anot0_emd, polynomial=True)
+    Tmask01= (EMD.temperature > 0.0099) * (EMD.temperature < 0.0101)
+    Tmask02 = (EMD.temperature > 0.0199) * (EMD.temperature < 0.0201)
+    Tmask03 = (EMD.temperature > 0.0299) * (EMD.temperature < 0.0301)
+    Tmask04 = (EMD.temperature > 0.0399) * (EMD.temperature < 0.0401)
+    Tmask05 = (EMD.temperature > 0.0499) * (EMD.temperature < 0.0501)
+    Tmask06 = (EMD.temperature > 0.0599) * (EMD.temperature < 0.0601)
+    Tmask08 = (EMD.temperature > 0.0799) * (EMD.temperature < 0.0801)
+    Tmask10 = (EMD.temperature > 0.0999) * (EMD.temperature < 0.1001)
 
-    # figlist = []
+    # Tmask = Tmask01 + Tmask02 + Tmask04 + Tmask06 + Tmask08 + Tmask10
+    Tmask = Tmask01 + Tmask03 + Tmask06 + Tmask10
+    highAmask = (EMD.lattice_amplitude > 0.02)
+    shearlenghtfig = QuantityQuantityPlot("one_over_A", "shear_length", EMD, quantity_multi_line="temperature",
+                                          mask1=highAmask * custom_mask * Tmask, linelabels=True, cbar=False)
+
+    high_A_mask = (EMD.lattice_amplitude > .4001) * custom_mask
+    mask_fit(Tmask01*high_A_mask, shearlenghtfig, labelprefix="T=0.01, ")
+    # mask_fit(Tmask02*high_A_mask, shearlenghtfig, labelprefix="T=0.02, ")
+    mask_fit(Tmask03 * high_A_mask, shearlenghtfig, labelprefix="T=0.03, ")
+    # mask_fit(Tmask04*high_A_mask, shearlenghtfig, labelprefix="T=0.04, ")
+    # mask_fit(Tmask05 * high_A_mask, shearlenghtfig, labelprefix="T=0.05, ")
+    mask_fit(Tmask06*high_A_mask, shearlenghtfig, labelprefix="T=0.06, ")
+    # mask_fit(Tmask08*high_A_mask, shearlenghtfig, labelprefix="T=0.08, ")
+    mask_fit(Tmask10*high_A_mask, shearlenghtfig, labelprefix="T=0.10, ")
+    shearlenghtfig.ax1.hlines(np.pi/np.sqrt(2),0,6,"red", "--", label=r"$\pi/(\mu\sqrt{2})$")
+    shearlenghtfig.ax1.legend(loc = "upper left")
+    shearlenghtfig.ax1.set_xlim(xmax=5)
+
+    sigmaTfig = QuantityQuantityPlot("temperature", "conductivity_T", EMD, quantity_multi_line="lattice_amplitude",
+                                     mask1=Anot0_emd*custom_mask*(EMD.temperature>0.0089))
+    sigmaTfig.ax1.set_ylim(ymin=0, ymax=10)
+    sigmaTfig.ax1.set_xlim(xmin=0, xmax=0.10)
+    temp, conductivity_T_lim = utils.sort(EMD.temperature, EMD.conductivity_T_limit)
+    sigmaTfig.ax1.plot(temp, conductivity_T_lim, "--", color="red", label=r"$\tau_L = 2 \pi^3\tau_{\hbar}$")
+    sigmaTfig.ax1.legend()
+
+
+    # figlist = [shearlenghtfig, sigmaTfig]
     # IO_utils.save(figlist)
     # d = pd.DataFrame(d={'T': EMD.temperature, 'A': EMD.lattice_amplitude, 'plasmon_frequency_squared': EMD.plasmon_frequency_squared})
     print("plots are build")

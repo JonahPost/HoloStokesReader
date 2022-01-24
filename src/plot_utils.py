@@ -13,14 +13,13 @@ import src.utils as utils
 # plt.style.reload_library()
 plt.style.use(['science','ieee','no-latex'])
 
-
 class QuantityQuantityPlot:
     """"
     A class to compute desired plots, for any given quantities.
     """
 
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
-                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True):
+                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, cbar=True):
         # exponential and polynomial will only be fit to model_1
         # What happen when both model_2 and multi_line are on?
         """"
@@ -51,10 +50,10 @@ class QuantityQuantityPlot:
             Boolean value for whether or not to make the plots on a loglog scale.
         """
         self.long_dict = {
-            "temperature": r"$T (\mu)$",
+            "temperature": r"$T/\mu$",
             "periodicity": "Periodicity",
             "lattice_amplitude": "Amplitude",
-            "one_over_A": "1/Amplitude",
+            "one_over_A": r"$1/A$",
             "entropy": "Entropy"
             }
         self.short_dict = {
@@ -78,9 +77,14 @@ class QuantityQuantityPlot:
             "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
             "shear_length": r"$\ell_{\eta}$",
             "one_over_shear_length": r"$q_{\eta}=\frac{1}{\ell_{\eta}}$",
-            "resistivity_over_T": r"$\rho/T$"
+            "resistivity_over_T": r"$\rho/T$",
+            "resistivity_xx": r"$\rho$",
+            "conductivity_T": r"$\sigma T$",
+            "conductivity_xx": r"$\sigma_{xx}$"
         }
-        self.scienceplot=scienceplot
+        self.scienceplot = scienceplot
+        self.linelabels = linelabels
+        self.cbar = cbar
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
         self.model_1 = model_1
@@ -103,11 +107,11 @@ class QuantityQuantityPlot:
                 self.multiline_data2 = getattr(self.model_2, self.quantity_multi_line)[self.mask2]
 
         # Initialize figure
-        figure_size = (8, 5)
-        # self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
+        figure_size = (4, 2)
+        self.fig, self.ax1 = plt.subplots(1, 1, figsize=figure_size)
         # self.fig, self.ax1 = plt.subplots(1, 1)
-        self.fig = plt.figure()
-        self.ax1 = self.fig.add_axes([0, 0, 1, 1])
+        # self.fig = plt.figure(figsize=figure_size)
+        # self.ax1 = self.fig.add_axes([0, 0, 1, 1])
 
         self.compute_title_prefix()
         self.compute_title_appendix()
@@ -149,10 +153,15 @@ class QuantityQuantityPlot:
             for i, quantity_value in enumerate(np.unique(self.multiline_data1)):
                 mask = (self.multiline_data1 == quantity_value)
                 x, y = utils.sort(self.xdata1[mask], self.ydata1[mask])
-                line_label = self.short_dict[self.quantity_multi_line] + "=" + str(quantity_value)
+                x, y = utils.remove_nan(x, y)
+                if self.linelabels:
+                    line_label = self.short_dict[self.quantity_multi_line] + "={:.2f}".format(quantity_value)
+                else:
+                    line_label=None
                 line_color = self.cmap1.to_rgba(quantity_value)
                 if self.scienceplot:
-                    self.ax1.plot(x, y, "-", label=self.label_prefix1 + line_label, c=line_color)
+                    # self.ax1.plot(x, y, "-", label=self.label_prefix1 + line_label, c=line_color)
+                    self.ax1.plot(x, y, "-", markersize = 3, c=line_color, label=line_label)
                 else:
                     self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
                 if self.exponential:
@@ -173,22 +182,23 @@ class QuantityQuantityPlot:
                     if self.exponential:
                         self.ax_exp.plot(x2, np.gradient(np.log(y2), x2) * x2, "-x",
                                          label=self.label_prefix2 + line_label, c=line_color)
-                self.cbar2 = self.fig.colorbar(self.cmap2, ax=self.ax1)
-                self.cbar2.set_label(self.label_prefix2 + self.long_dict[self.quantity_multi_line])
+                if self.cbar:
+                    self.cbar2 = self.fig.colorbar(self.cmap2, ax=self.ax1)
+                    self.cbar2.set_label(self.label_prefix2 + self.long_dict[self.quantity_multi_line])
+                    if self.exponential:
+                        self.cbarexp2 = self.fig.colorbar(self.cmap2, ax=self.ax_exp)
+                        self.cbarexp2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
+            if self.cbar:
+                self.cbar1 = self.fig.colorbar(self.cmap1, ax=self.ax1)
+                self.cbar1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
                 if self.exponential:
-                    self.cbarexp2 = self.fig.colorbar(self.cmap2, ax=self.ax_exp)
-                    self.cbarexp2.set_label(self.label_prefix2 + self.dict[self.quantity_multi_line])
-
-            self.cbar1 = self.fig.colorbar(self.cmap1, ax=self.ax1)
-            self.cbar1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
-            if self.exponential:
-                self.cbarexp1 = self.fig.colorbar(self.cmap1, ax=self.ax_exp)
-                self.cbarexp1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
-            if self.polynomial:
-                self.cbar1.remove()
-                if self.model_2 is not None:
-                    self.cbar2.remove()
-                self.ax1.legend(loc=(1, 0))
+                    self.cbarexp1 = self.fig.colorbar(self.cmap1, ax=self.ax_exp)
+                    self.cbarexp1.set_label(self.label_prefix1 + self.long_dict[self.quantity_multi_line])
+                if self.polynomial:
+                    self.cbar1.remove()
+                    if self.model_2 is not None:
+                        self.cbar2.remove()
+                    self.ax1.legend(loc=(1, 0))
 
         else:
             x, y = utils.sort(self.xdata1, self.ydata1)
@@ -247,10 +257,14 @@ class QuantityQuantityPlot:
 
     def make_cbar(self):
         quantities = np.unique(self.multiline_data1)
-        norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
-        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
-        if self.model_1.model == "RN" or self.model_1.model == "rn":
-            self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.Wistia)
+        if quantities.min() < 0:
+            norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
+        else:
+            norm1 = mpl.colors.Normalize(0, vmax=quantities.max())
+        # self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
+        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.inferno.reversed())
+        # if self.model_1.model == "RN" or self.model_1.model == "rn":
+        #     self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.Wistia)
         self.cmap1.set_array([])
         if self.model_2 is not None:
             quantities = np.unique(self.multiline_data2)
