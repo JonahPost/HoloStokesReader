@@ -18,6 +18,7 @@ import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
 from matplotlib import rcParams
 import examples.planckianuniversalityplot as plankianuniversality
+from examples.thermo_quantities import plot_energy_pressure, plot_conductivities, plot_entropy, plot_drude_weight, plot_universality
 
 
 plt.style.use(['science','ieee','no-latex'])
@@ -41,10 +42,22 @@ EMD_fname = "EMD_T_A_G=0.1000_3_zonderAhalf.txt"
 path = "data/"
 
 
-
+# EMD = DataSet(model="EMD", fname=path + EMD_fname)
+# RN = DataSet(model="RN", fname=path + RN_fname)
+# print("Data is imported")
+# for dataset in [EMD, RN]:
+#     print(dataset.model)
+#     physics.calc_properties(dataset)
 
 if __name__ == '__main__':
     plankianuniversality.main()
+    # plot_energy_pressure(EMD)
+    # plot_conductivities(EMD)
+    # plot_entropy(EMD)
+    # plot_drude_weight(EMD)
+    # plot_universality(EMD)
+    plt.show()
+    plt.close()
 else:
     EMD = DataSet(model="EMD", fname=path + EMD_fname)
     RN = DataSet(model="RN", fname=path + RN_fname)

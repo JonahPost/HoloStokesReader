@@ -290,7 +290,7 @@ def plot_RN(ax_conductivity, ax_shearlength):
     ax[0].set_ylim([0, 75])
     ax[0].set_xlabel(r"$T/\mu$")
     ax[0].set_ylabel(r"$\sigma_{xx}$")
-    ax[0].annotate("B", xy=(0.03, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
+    ax[0].annotate("B", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
     # -----------------------------
 
@@ -298,7 +298,7 @@ def plot_RN(ax_conductivity, ax_shearlength):
     ax[1].set_ylim([0, 8])
     ax[1].set_xlabel(r"$1/A$")
     ax[1].set_ylabel(r"$\ell_{\eta}$")
-    ax[1].annotate("D", xy=(0.03, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
+    ax[1].annotate("D", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
     # -----------------------------
 

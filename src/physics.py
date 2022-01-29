@@ -30,6 +30,7 @@ def calc_properties(model):
     model.drudeweight_over_rho = model.drude_weight_from_temperature_entropy / model.charge_density
 
     ## Thermodynamics
+    model.entropy_over_T = model.entropy / model.temperature
     model.energy_plus_pressure = model.energy + model.pressure
     # model.energy_plus_pressure_A0 = compute_homogeneous_A0_value(model, "energy_plus_pressure")
     model.equation_of_state = model.energy + model.pressure - model.temperature * model.entropy - model.charge_density
@@ -44,7 +45,7 @@ def calc_properties(model):
     model.s2_over_rho2 = model.s_over_rho**2
     model.wf_ratio = (model.kappabar_xx / (model.conductivity_xx * model.temperature))
 
-    ## Gamma_L
+    # Gamma_L
     # compute_gamma_L(model, model.drude_weight_A0)
     ## Relative differences of Gamma_L
     # compute_gamma_differences(model)
@@ -56,7 +57,9 @@ def calc_properties(model):
     if model.model == "EMD":
         model.entropy_A0 = compute_homogeneous_A0_value(model , "entropy")
         model.charge_density_A0 = compute_homogeneous_A0_value(model, "charge_density")
-        model.shear_length = np. sqrt(model.entropy_A0 * model.conductivity_xx / ( 4*np.pi*(model.charge_density_A0**2) ))
+        model.shear_length      = np.sqrt(model.entropy_A0 * model.conductivity_xx / ( 4*np.pi*(model.charge_density_A0**2) ))
+        # model.shear_length_alt1 = np.sqrt(model.entropy    * model.conductivity_xx / ( 4*np.pi*(model.charge_density**2   ) ))
+        # model.shear_length_alt2 = np.sqrt(model.entropy_A0 * model.conductivity_xx / (4 * np.pi * model.energy_plus_pressure *model.drude_weight_A0))
         model.one_over_shear_length = 1/model.shear_length
         # model.conductivity_T_limit = model.drude_weight_A0_from_energy_pressure * 2 * np.pi**3
         # model.conductivity_T_limit = model.temperature*4*np.pi* model.charge_density_A0**2 * (np.pi/np.sqrt(2))**2 / model.entropy_A0

@@ -60,27 +60,34 @@ class QuantityQuantityPlot:
             "temperature": r"$T$",
             "periodicity": r"$G$",
             "lattice_amplitude": r"$A$",
+            "energy": r"$\mathcal{E}$",
+            "pressure": r"$\mathcal{P}$",
+            "energy_plus_pressure": r"$\mathcal{E}+\mathcal{P}$",
+            "energy_pressure_ratio": r"$\mathcal{E}/\mathcal{P}$",
             "one_over_A": r"$\frac{1}{A}$",
             "entropy": r"$S$",
+            "entropy_over_T": r"$S/T$",
             "charge_density": r"$\rho$",
             "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
             "gamma_L_from_alpha": r"$\Gamma_{L,\alpha}$",
             "gamma_L_from_kappabar": r"$\Gamma_{L,\bar{\kappa}}$",
-            "drude_weight_from_energy_pressure": r"$\omega_p^2$",
-            "drude_weight_from_temperature_entropy": r"$\omega_p^2$",
-            "drude_weight_A0": r"$\omega_p^2$",
-            "sigma_xx": r"$\sigma$",
-            "alpha_xx": r"$\alpha$",
-            "kappabar_xx": r"$\bar{kappa}$",
+            "drude_weight_from_energy_pressure": r"$\omega_p^2 (\mathcal{E}+\mathcal{P})$",
+            "drude_weight_from_temperature_entropy": r"$\omega_p^2 (S, T)$",
+            "drude_weight_A0": r"$\omega_p^2 (A=0)$",
+            "conductivity_xx": r"$\sigma_{xx}$",
+            "alpha_xx": r"$\alpha_{xx}$",
+            "kappa_xx": r"$\kappa_{xx}$",
+            "kappabar_xx": r"$\bar{\kappa}_{xx}$",
             "sigmaQ_from_sigma_alpha": r"$\sigma_Q$",
             "sigmaQ_from_sigma_kappabar": r"$\sigma_Q$",
             "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
             "shear_length": r"$\ell_{\eta}$",
+            "shear_length_alt1": r"$\ell_{\eta}$",
+            "shear_length_alt2": r"$\ell_{\eta}$",
             "one_over_shear_length": r"$q_{\eta}=\frac{1}{\ell_{\eta}}$",
             "resistivity_over_T": r"$\rho/T$",
             "resistivity_xx": r"$\rho$",
             "conductivity_T": r"$\sigma T$",
-            "conductivity_xx": r"$\sigma_{xx}$"
         }
         self.scienceplot = scienceplot
         self.ax = ax
@@ -122,11 +129,11 @@ class QuantityQuantityPlot:
         self.title1 = (self.title_prefix + f"{y_quantity_name} vs {x_quantity_name}" + self.title_appendix).replace("_", " ")
         if not scienceplot:
             self.ax1.set_title(self.title1)
-        if scienceplot:
-            self.ax1.text(.95,.95, self.title_appendix,
-                    horizontalalignment='right',
-                    verticalalignment='top',
-                    transform=self.ax1.transAxes)
+        # if scienceplot:
+        #     self.ax1.text(.95,.95, self.title_appendix,
+        #             horizontalalignment='right',
+        #             verticalalignment='top',
+        #             transform=self.ax1.transAxes)
         if y_quantity_name in self.short_dict.keys():
             self.ax1.set_ylabel(self.short_dict[y_quantity_name])
         else:
@@ -216,7 +223,7 @@ class QuantityQuantityPlot:
                 xrange = np.linspace(self.xdata1[0], self.xdata1[-1])
                 self.ax1.plot(xrange, pol(xrange), label=r"{:.2f}+{:.2f}$x$+{:.2f}$x^2$".format(*popt))
             self.ax1.legend()
-        if not any(self.ydata1 < 0):
+        if not np.any(self.ydata1 < 0):
             self.ax1.set_ylim(ymin=0)
         self.ax1.set_xlim(xmin=0)
         # self.ax1.grid()
