@@ -16,7 +16,7 @@ def plot_RN(ax_conductivity, ax_shearlength):
     pd.set_option("display.max_rows", None, "display.max_columns", None)
 
     path = "data/" # the folder where the data files are located
-    AT_fname = "ATSeriesHighA.txt"
+    AT_fname = "StokesOutput_new-stokes_memjob_G01.txt"
     BT_A0_fname = "BTSeriesA0.txt"
 
     def divide_T(df):
@@ -135,8 +135,9 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
     # -----------------------------
 
-    df_list = [dfT01, dfT03, dfT06, dfT1]
-    T_list = ["0.01", "0.03", "0.06", "0.10"]
+    df_list = [dfT02, dfT04, dfT06]
+    T_list = ["0.02", "0.04", "0.06"]
+
 
     count = 0
     for df in df_list:
@@ -144,12 +145,11 @@ def plot_RN(ax_conductivity, ax_shearlength):
         # df = change_kappa(df)
         df = df.sort_values("A0")
 
-        df = df[1:5]
+        # df = df[1:5]
 
         T = df["T"]
         G = df["P"]
         A = df["A0"]
-        print(A)
 
         omega_P_squared = df["rho"] ** 2 / (-df["Ttt"] + df["Txx"])
 
@@ -195,11 +195,11 @@ def plot_RN(ax_conductivity, ax_shearlength):
             return a * x + b
 
 
-        y_test = y[:2]
-        A_test = A[:2]
-
+        y_test = y[6:]
+        A_test = A[6:]
+        print(A[6:])
         params, params_covariance = optimize.curve_fit(test_func, A_test, y_test)
-        x = np.arange(0, 2, 0.001)
+        x = np.arange(0, 0.4, 0.001)
 
 
         def fit_func(x):
@@ -213,10 +213,9 @@ def plot_RN(ax_conductivity, ax_shearlength):
         ax[1].plot(x_sub, fit_sub, linestyle=(0, (1, 1)), c="k", linewidth=.5)
         line_color = cmap1.to_rgba(float(T_list[count]))
         ax[1].plot(A_sub, y_sub, '-', color=line_color, label=(r"$T={}$".format(float(T_list[count]))))
-
         count = count + 1
 
-    x = np.arange(0, 2, 0.001)
+    x = np.arange(0,3, 0.001)
     x_sub2 = x
 
     # Since Mu = 1:
@@ -230,20 +229,33 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
     df = pd.read_csv(path+AT_fname, sep = '\t')
     df = divide_T(df)
+    print(np.unique(df["A0"]))
     #df = change_kappa(df)
     #df = df.sort_values("T")
 
     dfA01 = df.loc[(df["A0"]>0.09) & (df["A0"]<0.11)]
     dfA01 = dfA01.sort_values("T")
 
+    dfA04 = df.loc[(df["A0"] > 0.39) & (df["A0"] < 0.41)]
+    dfA04 = dfA04.sort_values("T")
+
     dfA05 = df.loc[(df["A0"]>0.49) & (df["A0"]<0.51)]
     dfA05 = dfA05.sort_values("T")
+
+    dfA08 = df.loc[(df["A0"] > 0.79) & (df["A0"] < 0.81)]
+    dfA08 = dfA08.sort_values("T")
 
     dfA1 = df.loc[(df["A0"]>0.99) & (df["A0"]<1.01)]
     dfA1 = dfA1.sort_values("T")
 
+    dfA12 = df.loc[(df["A0"] > 1.19) & (df["A0"] < 1.21)]
+    dfA12 = dfA12.sort_values("T")
+
     dfA15 = df.loc[(df["A0"]>1.49) & (df["A0"]<1.51)]
     dfA15 = dfA15.sort_values("T")
+
+    dfA16 = df.loc[(df["A0"] > 1.59) & (df["A0"] < 1.61)]
+    dfA16 = dfA16.sort_values("T")
 
     dfA2 = df.loc[(df["A0"]>1.99) & (df["A0"]<2.01)]
     dfA2 = dfA2.sort_values("T")
@@ -262,12 +274,12 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
     # -----------------------------
 
-    df_list = [dfA05, dfA1, dfA15, dfA2]
-    A_list = ["0.5", "1.0", "1.5", "2.0"]
+    df_list = [dfA04, dfA08, dfA12, dfA16, dfA2]
+    A_list = ["0.4", "0.8", "1.2", "1.6", "2.0"]
 
     count = 0
 
-    for df in df_list:
+    for df, A_string in zip(df_list, A_list):
         df = df[4:]
 
         T = df["T"]
@@ -280,16 +292,19 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
         # line_color = cmap.to_rgba(float(A_list[count]))
         line_color = cmap0.to_rgba(float(A_list[count]))
-        ax[0].plot(T[1:], y[1:], '-', c=line_color)
+        ax[0].plot(T[1:], y[1:], '-', c=line_color, label="A="+A_string)
 
         count = count + 1
-
     # -----------------------------
+    rho_homogeneous = dfB0["rho"]
+    entropy_homogeneous = dfB0["S"]
+    sigma_xx_sat = 2 * np.pi ** 3 * rho_homogeneous ** 2 / entropy_homogeneous
+    temp_for_sat = dfB0["T"]
+    ax[0].plot(temp_for_sat, sigma_xx_sat, "--", c="r", label=r"$\tau_L = 2 \pi^3\tau_{\hbar}$")
 
-
-    ax[0].set_ylim([0, 75])
+    # ax[0].set_ylim([0, 75])
     ax[0].set_xlabel(r"$T/\mu$")
-    ax[0].set_ylabel(r"$\sigma_{xx}$")
+    ax[0].set_ylabel(r"$\sigma$")
     ax[0].annotate("B", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
     # -----------------------------
@@ -309,7 +324,7 @@ if __name__ == '__main__':
     fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=figure_size)
     plot_RN(ax2, ax4)
     ax2.set_xlim(xmin=0, xmax=0.10)
-    ax4.set_xlim(xmin=0, xmax=2)
+    ax4.set_xlim(xmin=0, xmax=3)
     ax4.set_ylim(ymin=0, ymax=10)
     ax4.legend()
     fig.tight_layout()

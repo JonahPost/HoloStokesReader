@@ -60,7 +60,7 @@ def main():
         physics.calc_properties(dataset)
 
     ## Initialize plot
-    figure_size = (6, 3)
+    figure_size = (5, 3)
     fig, [[ax1, ax2],[ax3, ax4]] = plt.subplots(2, 2, figsize=figure_size)
 
 
@@ -79,7 +79,7 @@ def main():
     emd_Tmask08 = (EMD.temperature > 0.0799) * (EMD.temperature < 0.0801)
     emd_Tmask10 = (EMD.temperature > 0.0999) * (EMD.temperature < 0.1001)
 
-    emd_Tmask = emd_Tmask01 + emd_Tmask03 + emd_Tmask06 + emd_Tmask10
+    emd_Tmask = emd_Tmask02 + emd_Tmask04 + emd_Tmask06 + emd_Tmask08 + emd_Tmask10
     emd_highAmask = (EMD.lattice_amplitude > 0.02)
 
 
@@ -87,23 +87,27 @@ def main():
                                           mask1=emd_highAmask * emd_custom_mask * emd_Tmask, linelabels=True, cbar=False, ax=ax3, figure=fig)
 
     emd_high_A_mask = (EMD.lattice_amplitude > .4001) * emd_custom_mask
-    mask_fit(emd_Tmask01*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.01, ")
-    # mask_fit(emd_Tmask02*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.02, ")
-    mask_fit(emd_Tmask03 * emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.03, ")
-    # mask_fit(emd_Tmask04*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.04, ")
+    # mask_fit(emd_Tmask01*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.01, ")
+    mask_fit(emd_Tmask02*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.02, ")
+    # mask_fit(emd_Tmask03 * emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.03, ")
+    mask_fit(emd_Tmask04*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.04, ")
     # mask_fit(emd_Tmask05 * emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.05, ")
     mask_fit(emd_Tmask06*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.06, ")
-    # mask_fit(emd_Tmask08*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.08, ")
+    mask_fit(emd_Tmask08*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.08, ")
     mask_fit(emd_Tmask10*emd_high_A_mask, emd_shearlenghtfig, labelprefix="T=0.10, ")
     emd_shearlenghtfig.ax1.hlines(np.pi/np.sqrt(2),0,6,"red", "--", label=r"$\pi/(\mu\sqrt{2})$")
     emd_shearlenghtfig.ax1.set_xlim(xmax=5)
     emd_shearlenghtfig.ax1.annotate("C", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
+    emd_Amask04 = (EMD.lattice_amplitude > 0.399) * (EMD.lattice_amplitude < 0.401)
     emd_Amask05 = (EMD.lattice_amplitude > 0.499) * (EMD.lattice_amplitude < 0.501)
+    emd_Amask08 = (EMD.lattice_amplitude > 0.799) * (EMD.lattice_amplitude < 0.801)
     emd_Amask10 = (EMD.lattice_amplitude > 0.999) * (EMD.lattice_amplitude < 1.001)
+    emd_Amask12 = (EMD.lattice_amplitude > 1.199) * (EMD.lattice_amplitude < 1.201)
     emd_Amask15 = (EMD.lattice_amplitude > 1.499) * (EMD.lattice_amplitude < 1.501)
+    emd_Amask16 = (EMD.lattice_amplitude > 1.599) * (EMD.lattice_amplitude < 1.601)
     emd_Amask20 = (EMD.lattice_amplitude > 1.999) * (EMD.lattice_amplitude < 2.001)
-    emd_Amask = emd_Amask05 + emd_Amask10 + emd_Amask15 + emd_Amask20
+    emd_Amask = emd_Amask04 + emd_Amask08 + emd_Amask12 + emd_Amask16 + emd_Amask20
 
 
     emd_sigmaTfig = QuantityQuantityPlot("temperature", "conductivity_T", EMD, quantity_multi_line="lattice_amplitude",
@@ -118,24 +122,30 @@ def main():
     rn_high_A_mask = (EMD.lattice_amplitude > .4001)
 
 
+    ax1.set_xlim(xmin=0, xmax=0.06)
+    ax2.set_xlim(xmin=0, xmax=0.06)
+    ax3.set_xlim(xmin=0, xmax=3)
+    ax4.set_xlim(xmin=0, xmax=3)
 
-    ax2.set_xlim(xmin=0, xmax=0.10)
-    ax4.set_xlim(xmin=0, xmax=2)
-
+    ax2.set_ylim(ymin=0, ymax=180)
     ax3.set_ylim(ymin=0, ymax=10)
     ax4.set_ylim(ymin=0, ymax=10)
 
     ax1.legend(loc="upper left")
-    ax2.legend()
+    ax2.legend(loc="upper left")
     ax3.legend(loc="upper left")
-    ax4.legend()
+    ax4.legend(loc="upper left")
 
     fig.tight_layout()
 
-    folder_name = "plots/plots_on_" + datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
-    os.mkdir(folder_name)
-    print("new folder made")
-    fig.savefig(folder_name + "/PlanckianUniversality.png")
-    print("plots are saved")
+    save = False
+    save = True
+    if save:
+        folder_name = "plots/plots_on_" + datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+        os.mkdir(folder_name)
+        print("new folder made")
+        fig.savefig(folder_name + "/PlanckianUniversality.png")
+        print("plots are saved")
+
     plt.show()
     plt.close()
