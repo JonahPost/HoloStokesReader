@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 
 
 class DataSet():
-    def __init__(self, model, fname):
+    def __init__(self, model, fname, snellius=False):
         """"
         Parameters
         ----------
@@ -25,8 +25,12 @@ class DataSet():
         """
         self.model = model
         self.filename = fname
-        self.specify_model()
-        self.import_data()
+
+        if snellius:
+            self.import_data_snellius()
+        else:
+            self.specify_model()
+            self.import_data_ALICE()
         # self.calc_properties()
 
     def specify_model(self):
@@ -48,7 +52,33 @@ class DataSet():
         else:
             raise Exception("specify the model: 'EMD' or 'RN' or 'emd' or 'rn' ")
 
-    def import_data(self):
+    def import_data_snellius(self):
+        self.data = pd.read_csv(self.filename, sep="\t")
+        self.data = self.data.sort_values(by=["Ax", "T"])
+        self.periodicity_x = self.data["Gx"].to_numpy()
+        self.periodicity_y = self.data["Gy"].to_numpy()
+        self.periodicity = self.periodicity_x
+        self.amplitude_x = self.data["Ax"].to_numpy()
+        self.amplitude_y = self.data["Ay"].to_numpy()
+        self.lattice_amplitude = self.amplitude_x
+        self.temperature = self.data["T"].to_numpy()
+        self.conductivity_xx = self.data["SigmaEL"].to_numpy()
+        self.conductivity_xy = self.data["SigmaET"].to_numpy()
+        self.alpha_xx = self.data["SigmaAlphaL"].to_numpy() / self.temperature
+        self.alpha_xy = self.data["SigmaAlphaT"].to_numpy() / self.temperature
+        self.alphabar_xx = self.data["SigmaAlphaBarL"].to_numpy() / self.temperature
+        self.alphabar_xy = self.data["SigmaAlphaBarT"].to_numpy() / self.temperature
+        self.kappabar_xx = self.data["SigmaKappaL"].to_numpy() / self.temperature
+        self.kappabar_xy = self.data["SigmaKappaT"].to_numpy() / self.temperature
+        self.entropy = self.data["S"].to_numpy()
+        self.energy = -self.data["Ttt"].to_numpy()
+        self.pressure_x = self.data["Txx"].to_numpy()
+        self.pressure_y = self.data["Tyy"].to_numpy()
+        self.pressure = self.pressure_x
+        self.chem_pot = self.data["mu"].to_numpy()
+        self.charge_density = self.data["rho"].to_numpy()
+
+    def import_data_ALICE(self):
         self.data = pd.read_csv(self.filename, sep="\t")
         self.data = self.data.sort_values(by=[self.lattice_amplitude_key, "T"])
         self.periodicity = self.data[self.periodicity_key].to_numpy()
@@ -64,7 +94,10 @@ class DataSet():
         self.kappabar_xx = self.data["SigmaKappa11"].to_numpy() / self.temperature  # thermal conductivity
         self.kappabar_xy = self.data["SigmaKappa12"].to_numpy() / self.temperature
         self.entropy = self.data["S"].to_numpy()
-        # self.rhoH              =  self.data["rhoH"].to_numpy()
+        try:
+            self.rhoH =  self.data["rhoH"].to_numpy()
+        except:
+            pass
         self.energy = -self.data["Ttt"].to_numpy()  # energy stress tensor
         self.pressure = self.data["Txx"].to_numpy()
         self.pressurediffxxyy = self.data["Txx"].to_numpy() - self.data["Tyy"].to_numpy()
@@ -80,53 +113,53 @@ class DataSet():
         self.chem_pot = self.data[self.chem_pot_key].to_numpy()
         # self.black_hole_charge = self.data["Q"].to_numpy()
 
-    def calc_properties(self):
-        self.resistivity_xx = 1. / self.conductivity_xx
-        self.resistivity_xy = 1. / self.conductivity_xy
-        self.kappa_xx = self.kappabar_xx - self.alpha_xx ** 2 * self.temperature / self.conductivity_xx
-        self.plasmon_frequency_squared_from_pressure = (self.charge_density ** 2 / (self.energy + self.pressure))
-        self.plasmon_frequency_squared_from_temperature = (self.charge_density ** 2 / (self.entropy*self.temperature + self.charge_density))
+    # def calc_properties(self):
+    #     self.resistivity_xx = 1. / self.conductivity_xx
+    #     self.resistivity_xy = 1. / self.conductivity_xy
+    #     self.kappa_xx = self.kappabar_xx - self.alpha_xx ** 2 * self.temperature / self.conductivity_xx
+    #     self.plasmon_frequency_squared_from_pressure = (self.charge_density ** 2 / (self.energy + self.pressure))
+    #     self.plasmon_frequency_squared_from_temperature = (self.charge_density ** 2 / (self.entropy*self.temperature + self.charge_density))
+    #
+    #     self.equation_of_state =self.energy + self.pressure - self.temperature*self.entropy - self.charge_density # in units of \mu=1
+    #     self.energy_pressure_ratio = self.energy/self.pressure
+    #     self.one_over_mu = 1/self.chem_pot
+    #     self.s2_over_rho2 = (self.entropy/self.charge_density)**2
+    #     self.wf_ratio = (self.kappabar_xx/(self.conductivity_xx*self.temperature))
+    #
+    #     self.gamma_L_from_sigma =  (1/self.conductivity_xx) * (self.charge_density**2)/(self.energy + self.pressure)  # only holds for B=0
+    #     self.gamma_L_from_alpha =  (1/self.alpha_xx) * (self.charge_density * self.entropy)/(self.energy + self.pressure)
+    #     self.gamma_L_from_kappabar = (1 / self.kappabar_xx) * (self.entropy**2 * self.temperature) / (self.energy + self.pressure)
+    #
+    #     self.sigmaQ_from_sigma_alpha = self.sigmaQ_from_sigma_alpha()
+    #     self.sigmaQ_from_sigma_kappabar = self.sigmaQ_from_sigma_kappabar()
+    #     self.sigmaQ_from_alpha_kappabar = self.sigmaQ_from_alpha_kappabar()
+    #
+    # def sigmaQ_from_sigma_alpha(self):
+    #     sigma = self.conductivity_xx
+    #     alpha = self.alpha_xx
+    #     s = self.entropy
+    #     T = self.temperature
+    #     rho = self.charge_density
+    #     return (sigma - (rho/s)*alpha ) / (1 + (rho/(T*s)))
+    #
+    # def sigmaQ_from_sigma_kappabar(self):
+    #     sigma = self.conductivity_xx
+    #     kappabar = self.kappabar_xx
+    #     s = self.entropy
+    #     T = self.temperature
+    #     rho = self.charge_density
+    #     return (sigma - (rho**2 / (s**2 * T))*kappabar) / (1 - (rho**2 / (s**2 * T**2)))
+    #
+    # def sigmaQ_from_alpha_kappabar(self):
+    #     alpha = self.alpha_xx
+    #     kappabar = self.kappabar_xx
+    #     s = self.entropy
+    #     T = self.temperature
+    #     rho = self.charge_density
+    #     return( (rho/(s*T))*kappabar - alpha) / ( (rho/(T**2 * s)) + (1/T) )
 
-        self.equation_of_state =self.energy + self.pressure - self.temperature*self.entropy - self.charge_density # in units of \mu=1
-        self.energy_pressure_ratio = self.energy/self.pressure
-        self.one_over_mu = 1/self.chem_pot
-        self.s2_over_rho2 = (self.entropy/self.charge_density)**2
-        self.wf_ratio = (self.kappabar_xx/(self.conductivity_xx*self.temperature))
-
-        self.gamma_L_from_sigma =  (1/self.conductivity_xx) * (self.charge_density**2)/(self.energy + self.pressure)  # only holds for B=0
-        self.gamma_L_from_alpha =  (1/self.alpha_xx) * (self.charge_density * self.entropy)/(self.energy + self.pressure)
-        self.gamma_L_from_kappabar = (1 / self.kappabar_xx) * (self.entropy**2 * self.temperature) / (self.energy + self.pressure)
-
-        self.sigmaQ_from_sigma_alpha = self.sigmaQ_from_sigma_alpha()
-        self.sigmaQ_from_sigma_kappabar = self.sigmaQ_from_sigma_kappabar()
-        self.sigmaQ_from_alpha_kappabar = self.sigmaQ_from_alpha_kappabar()
-
-    def sigmaQ_from_sigma_alpha(self):
-        sigma = self.conductivity_xx
-        alpha = self.alpha_xx
-        s = self.entropy
-        T = self.temperature
-        rho = self.charge_density
-        return (sigma - (rho/s)*alpha ) / (1 + (rho/(T*s)))
-
-    def sigmaQ_from_sigma_kappabar(self):
-        sigma = self.conductivity_xx
-        kappabar = self.kappabar_xx
-        s = self.entropy
-        T = self.temperature
-        rho = self.charge_density
-        return (sigma - (rho**2 / (s**2 * T))*kappabar) / (1 - (rho**2 / (s**2 * T**2)))
-
-    def sigmaQ_from_alpha_kappabar(self):
-        alpha = self.alpha_xx
-        kappabar = self.kappabar_xx
-        s = self.entropy
-        T = self.temperature
-        rho = self.charge_density
-        return( (rho/(s*T))*kappabar - alpha) / ( (rho/(T**2 * s)) + (1/T) )
-
-# def polynomial(x, a2, a1):
-#     return a2 * (x**2) + a1 * x
+def polynomial(x, a2, a1):
+    return a2 * (x**2) + a1 * x
 
 def polynomial_quadratic(x, a2, a1, a0):
     return a2 * (x**2) + a1 * x + a0

@@ -10,7 +10,9 @@ import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 
-def plot_RN(ax_conductivity, ax_shearlength):
+
+
+def plot_RN(ax_conductivity, ax_shearlength, cmap):
     ax = [ax_conductivity, ax_shearlength]
 
     pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -130,13 +132,13 @@ def plot_RN(ax_conductivity, ax_shearlength):
     # -----------------------------
 
     norm1 = mpl.colors.Normalize(vmin=0, vmax=0.10)
-    cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.inferno.reversed())
+    cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=cmap)
     cmap1.set_array([])
 
     # -----------------------------
 
-    df_list = [dfT02, dfT04, dfT06]
-    T_list = ["0.02", "0.04", "0.06"]
+    df_list = [dfT02]
+    T_list = ["0.02"]
 
 
     count = 0
@@ -190,21 +192,17 @@ def plot_RN(ax_conductivity, ax_shearlength):
         y_sub = y
         A_sub = A
 
-
         def test_func(x, a, b):
             return a * x + b
 
-
         y_test = y[6:]
         A_test = A[6:]
-        print(A[6:])
+        # print(A[6:])
         params, params_covariance = optimize.curve_fit(test_func, A_test, y_test)
         x = np.arange(0, 0.4, 0.001)
 
-
         def fit_func(x):
             return params[0] * x + params[1]
-
 
         x_sub = x
         fit_sub = fit_func(x)
@@ -212,9 +210,13 @@ def plot_RN(ax_conductivity, ax_shearlength):
         # plt.plot(x, fit_func(x), '--', color='k', label=r"Fit: " + str(round(params[0], 2)) + "$ \cdot$ (1/A) + " + str(round(params[1], 2)))
         ax[1].plot(x_sub, fit_sub, linestyle=(0, (1, 1)), c="k", linewidth=.5)
         line_color = cmap1.to_rgba(float(T_list[count]))
-        ax[1].plot(A_sub, y_sub, '-', color=line_color, label=(r"$T={}$".format(float(T_list[count]))))
+        ax[1].plot(A_sub, y_sub, '-', linewidth=0.5, c="black", marker=".", markersize = 2, label=(r"$T={}$".format(float(T_list[count]))))
         count = count + 1
+        panelD_data = pd.DataFrame(data={'One_over_A': A_sub, 'Shearlength': y_sub})
+        panelD_fit_data = pd.DataFrame(data={'One_over_A': x_sub, 'Shearlength_fit': fit_sub})
 
+    panelD_data.to_csv('export_data/panelD_data.csv', sep='\t')
+    panelD_fit_data.to_csv('export_data/panelD_fit_data.csv', sep='\t')
     x = np.arange(0,3, 0.001)
     x_sub2 = x
 
@@ -229,7 +231,7 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
     df = pd.read_csv(path+AT_fname, sep = '\t')
     df = divide_T(df)
-    print(np.unique(df["A0"]))
+    # print(np.unique(df["A0"]))
     #df = change_kappa(df)
     #df = df.sort_values("T")
 
@@ -268,8 +270,8 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
     # -----------------------------
 
-    norm0 = mpl.colors.Normalize(vmin=0, vmax=2)
-    cmap0 = mpl.cm.ScalarMappable(norm=norm0, cmap=mpl.cm.inferno.reversed())
+    norm0 = mpl.colors.Normalize(vmin=0.4, vmax=2)
+    cmap0 = mpl.cm.ScalarMappable(norm=norm0, cmap=cmap)
     cmap0.set_array([])
 
     # -----------------------------
@@ -292,28 +294,34 @@ def plot_RN(ax_conductivity, ax_shearlength):
 
         # line_color = cmap.to_rgba(float(A_list[count]))
         line_color = cmap0.to_rgba(float(A_list[count]))
-        ax[0].plot(T[1:], y[1:], '-', c=line_color, label="A="+A_string)
+        ax[0].plot(T[1:], y[1:], '-', c=line_color, marker="", markersize = 3, label="A="+A_string)
 
         count = count + 1
+
     # -----------------------------
     rho_homogeneous = dfB0["rho"]
     entropy_homogeneous = dfB0["S"]
     sigma_xx_sat = 2 * np.pi ** 3 * rho_homogeneous ** 2 / entropy_homogeneous
     temp_for_sat = dfB0["T"]
-    ax[0].plot(temp_for_sat, sigma_xx_sat, "--", c="r", label=r"$\tau_L = 2 \pi^3\tau_{\hbar}$")
+    ax[0].plot(temp_for_sat, sigma_xx_sat, "--", c="r", linewidth=0.5, label=r"$\tau_L = 2 \pi^3\tau_{\hbar}$")
 
     # ax[0].set_ylim([0, 75])
     ax[0].set_xlabel(r"$T/\mu$")
     ax[0].set_ylabel(r"$\sigma$")
-    ax[0].annotate("B", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
+    ax[0].annotate("B", xy=(0.95, 1.02), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
+    panelB_data = pd.DataFrame(data={'Temperature': dfA04["T"][1:], 'Sigma_A04': dfA04["SigmaE11"][1:], 'Sigma_A08': dfA08["SigmaE11"][1:], 'Sigma_A12': dfA12["SigmaE11"][1:], 'Sigma_A16': dfA16["SigmaE11"][1:], 'Sigma_A20': dfA2["SigmaE11"][1:]})
+    panelB_saturation_data = pd.DataFrame(data={'Temperature': temp_for_sat, 'Sigma_saturation': sigma_xx_sat})
+
+    panelB_data.to_csv('export_data/panelB_data.csv', sep='\t')
+    panelB_saturation_data.to_csv('export_data/panelB_saturation_data.csv', sep='\t')
     # -----------------------------
 
-    ax[1].plot(x_sub2, line_sub, linestyle="--", color="r", label=r"$\pi / (\mu\sqrt{2})$")
+    ax[1].plot(x_sub2, line_sub, linestyle="--", color="r", linewidth=0.5, label=r"$\pi / (\mu\sqrt{2})$")
     ax[1].set_ylim([0, 8])
     ax[1].set_xlabel(r"$1/A$")
     ax[1].set_ylabel(r"$\ell_{\eta}$")
-    ax[1].annotate("D", xy=(0.95, 0.91), xycoords="axes fraction", fontsize=7, fontweight='bold')
+    ax[1].annotate("D", xy=(0.95, 1.02), xycoords="axes fraction", fontsize=7, fontweight='bold')
 
     # -----------------------------
 

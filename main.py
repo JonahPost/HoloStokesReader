@@ -17,16 +17,18 @@ import matplotlib
 import src.IO_utils as IO_utils
 from scipy.optimize import curve_fit
 from matplotlib import rcParams
+import palettable
+import examples.New_RN_data as New_RN_data
 import examples.planckianuniversalityplot as plankianuniversality
 from examples.thermo_quantities import plot_energy_pressure, plot_conductivities, plot_entropy, plot_drude_weight, plot_universality
 
 
-plt.style.use(['science','ieee','no-latex'])
+plt.style.use(['science','no-latex'])
 
 # matplotlib.mathtext.SHRINK_FACTOR = 0.2
 rcParams['font.family'] = 'DeJavu Sans'
-rcParams['font.sans-serif'] = ['Helvetica']
-
+# rcParams['font.sans-serif'] = ['Helvetica']
+rcParams['font.size'] = 14
 ##  Fill in the filenames of the data you want to use. Make sure it is in the data folder.
 
 # EMD_fname = "EMD_T_A_G=0.1000_full.txt"
@@ -34,7 +36,7 @@ rcParams['font.sans-serif'] = ['Helvetica']
 # EMD_1Dfname = "Unidir_T0.05_G0.1.txt"
 RN_fname = "RN_A_T_B0.0000_P0.1000_full.txt"
 
-EMD_fname = "EMD_T_A_G=0.1000_3_zonderAhalf.txt"
+EMD_fname = "EMD_T_A_G=0.1000_4.txt"
 # EMD_fname = "EMD_T_A_G=0.1000.txt"
 
 # EMD_fname = EMD_1Dfname
@@ -42,20 +44,24 @@ EMD_fname = "EMD_T_A_G=0.1000_3_zonderAhalf.txt"
 path = "data/"
 
 
-# EMD = DataSet(model="EMD", fname=path + EMD_fname)
-# RN = DataSet(model="RN", fname=path + RN_fname)
-# print("Data is imported")
-# for dataset in [EMD, RN]:
-#     print(dataset.model)
-#     physics.calc_properties(dataset)
+EMD = DataSet(model="EMD", fname=path + EMD_fname)
+RN = DataSet(model="RN", fname=path + RN_fname)
+print("Data is imported")
+for dataset in [EMD, RN]:
+    print(dataset.model)
+    physics.calc_properties(dataset)
 
 if __name__ == '__main__':
-    plankianuniversality.main()
+    # plankianuniversality.main()
+    New_RN_data.main()
     # plot_energy_pressure(EMD)
     # plot_conductivities(EMD)
     # plot_entropy(EMD)
     # plot_drude_weight(EMD)
     # plot_universality(EMD)
+    # QuantityQuantityPlot("lattice_amplitude", "energy", EMD, quantity_multi_line="temperature", cbar=True)
+    # QuantityQuantityPlot("temperature", "energy", EMD, quantity_multi_line="lattice_amplitude", cbar=True)
+
     plt.show()
     plt.close()
 else:

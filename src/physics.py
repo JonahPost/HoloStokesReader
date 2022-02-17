@@ -37,7 +37,7 @@ def calc_properties(model):
     model.energy_pressure_ratio = model.energy / model.pressure
     model.one_over_mu = 1 / model.chem_pot
     model.conductivity_T = model.conductivity_xx * model.temperature
-    model.resistivity_xx = 1 / model.conductivity_xx
+    model.resistivity_xx = model.conductivity_xx / (model.conductivity_xx**2 + model.conductivity_xy**2)
     model.resistivity_over_T = model.resistivity_xx / model.temperature
     model.sigmaDC_from_amplitude = np.sqrt(3) * ( 1 + model.lattice_amplitude**2 )**2 / ( 2*np.pi*(model.lattice_amplitude**2)*np.sqrt(4 + 6*(model.lattice_amplitude**2)) * model.temperature)
     model.sigmaDC_ratio = model.conductivity_xx/model.sigmaDC_from_amplitude
@@ -46,9 +46,9 @@ def calc_properties(model):
     model.wf_ratio = (model.kappabar_xx / (model.conductivity_xx * model.temperature))
 
     # Gamma_L
-    # compute_gamma_L(model, model.drude_weight_A0)
+    compute_gamma_L(model, model.drude_weight_from_energy_pressure)
     ## Relative differences of Gamma_L
-    # compute_gamma_differences(model)
+    compute_gamma_differences(model)
 
     ## Sigma_Q
     compute_sigmaQ(model)
@@ -87,9 +87,9 @@ def compute_gamma_L(model, drude_weight):
 
 def compute_gamma_differences(model):
     model.gamma_reldiff_sigma_alpha = \
-        (model.gamma_L_from_sigma - model.gamma_L_from_alpha) / model.gamma_L_from_sigma
+        (model.gamma_L_from_alpha) / model.gamma_L_from_sigma
     model.gamma_reldiff_sigma_kappabar = \
-        (model.gamma_L_from_sigma - model.gamma_L_from_kappabar) / model.gamma_L_from_sigma
+        (model.gamma_L_from_kappabar) / model.gamma_L_from_sigma
 
 def compute_sigmaQ(model):
     sigma = model.conductivity_xx

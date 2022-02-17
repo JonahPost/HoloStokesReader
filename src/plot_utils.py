@@ -19,7 +19,7 @@ class QuantityQuantityPlot:
     """
 
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
-                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, cbar=True, ax= None, figure=None):
+                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, linestyle="-", linewidth=1, marker=None, cbar=True, ax= None, figure=None, linecolor=None, cmap=mpl.cm.rainbow.reversed()):
         # exponential and polynomial will only be fit to model_1
         # What happen when both model_2 and multi_line are on?
         """"
@@ -54,7 +54,7 @@ class QuantityQuantityPlot:
             "periodicity": "Periodicity",
             "lattice_amplitude": "Amplitude",
             "one_over_A": r"$1/A$",
-            "entropy": "Entropy"
+            "entropy": "Entropy",
             }
         self.short_dict = {
             "temperature": r"$T$",
@@ -71,6 +71,8 @@ class QuantityQuantityPlot:
             "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
             "gamma_L_from_alpha": r"$\Gamma_{L,\alpha}$",
             "gamma_L_from_kappabar": r"$\Gamma_{L,\bar{\kappa}}$",
+            "gamma_reldiff_sigma_alpha": r"$\frac{\Gamma_{L,\alpha}}{\Gamma_{L,\sigma}}$",
+            "gamma_reldiff_sigma_kappabar": r"$\frac{\Gamma_{L,\bar{\kappa}}}{\Gamma_{L,\sigma}}$",
             "drude_weight_from_energy_pressure": r"$\omega_p^2 (\mathcal{E}+\mathcal{P})$",
             "drude_weight_from_temperature_entropy": r"$\omega_p^2 (S, T)$",
             "drude_weight_A0": r"$\omega_p^2 (A=0)$",
@@ -78,9 +80,9 @@ class QuantityQuantityPlot:
             "alpha_xx": r"$\alpha_{xx}$",
             "kappa_xx": r"$\kappa_{xx}$",
             "kappabar_xx": r"$\bar{\kappa}_{xx}$",
-            "sigmaQ_from_sigma_alpha": r"$\sigma_Q$",
-            "sigmaQ_from_sigma_kappabar": r"$\sigma_Q$",
-            "sigmaQ_from_alpha_kappabar": r"$\sigma_Q$",
+            "sigmaQ_from_sigma_alpha": r"$\sigma_{Q,(\sigma,\alpha)}$",
+            "sigmaQ_from_sigma_kappabar": r"$\sigma_{Q,(\sigma,\bar{\kappa})}$",
+            "sigmaQ_from_alpha_kappabar": r"$\sigma_{,(\alpha,\bar{\kappa})}$",
             "shear_length": r"$\ell_{\eta}$",
             "shear_length_alt1": r"$\ell_{\eta}$",
             "shear_length_alt2": r"$\ell_{\eta}$",
@@ -93,7 +95,12 @@ class QuantityQuantityPlot:
         self.ax = ax
         self.fig = figure
         self.linelabels = linelabels
+        self.linecolor = linecolor
+        self.linestyle = linestyle
+        self.linewidth = linewidth
+        self.marker = marker
         self.cbar = cbar
+        self.cmap =cmap
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
         self.model_1 = model_1
@@ -168,10 +175,13 @@ class QuantityQuantityPlot:
                     line_label = self.short_dict[self.quantity_multi_line] + "={:.2f}".format(quantity_value)
                 else:
                     line_label=None
-                line_color = self.cmap1.to_rgba(quantity_value)
+                if self.linecolor:
+                    line_color = self.linecolor
+                else:
+                    line_color = self.cmap1.to_rgba(quantity_value)
                 if self.scienceplot:
                     # self.ax1.plot(x, y, "-", label=self.label_prefix1 + line_label, c=line_color)
-                    self.ax1.plot(x, y, "-", markersize = 3, c=line_color, label=line_label)
+                    self.ax1.plot(x, y, linestyle=self.linestyle, linewidth=self.linewidth, marker=self.marker, markersize = 2, c=line_color, label=line_label)
                 else:
                     self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
                 if self.exponential:
@@ -270,9 +280,9 @@ class QuantityQuantityPlot:
         if quantities.min() < 0:
             norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
         else:
-            norm1 = mpl.colors.Normalize(vmin=0, vmax=quantities.max())
+            norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
         # self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
-        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.inferno.reversed())
+        self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=self.cmap)
         # if self.model_1.model == "RN" or self.model_1.model == "rn":
         #     self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.Wistia)
         self.cmap1.set_array([])
