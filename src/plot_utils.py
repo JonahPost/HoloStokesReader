@@ -12,6 +12,7 @@ import numpy as np
 import src.utils as utils
 # plt.style.reload_library()
 plt.style.use(['science','ieee','no-latex'])
+mpl.rcParams.update({'font.size': 10})
 
 class QuantityQuantityPlot:
     """"
@@ -19,7 +20,9 @@ class QuantityQuantityPlot:
     """
 
     def __init__(self, x_quantity_name, y_quantity_name, model_1, model_2=None, exponential=False, polynomial=False,
-                 quantity_multi_line=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="", scienceplot=True, linelabels=False, linestyle="-", linewidth=1, marker=None, cbar=True, ax= None, figure=None, linecolor=None, cmap=mpl.cm.rainbow.reversed()):
+                 quantity_multi_line=None, multi_line_around=None, mask1=None, mask2=None, logy=False, logx=False, fname_appendix="",
+                 linelabels=False, linestyle="-", linewidth=1, marker=None, cbar=True, cbarmin=None, cbarmax=None,
+                 ax= None, figure=None, linecolor=None, cmap=mpl.cm.rainbow.reversed(), yerr=None):
         # exponential and polynomial will only be fit to model_1
         # What happen when both model_2 and multi_line are on?
         """"
@@ -64,25 +67,33 @@ class QuantityQuantityPlot:
             "pressure": r"$\mathcal{P}$",
             "energy_plus_pressure": r"$\mathcal{E}+\mathcal{P}$",
             "energy_pressure_ratio": r"$\mathcal{E}/\mathcal{P}$",
+            "stress_energy_trace": r"$T^{\mu}_{\mu}$",
+            "pressure_ratio": r"$\mathcal{P}_y/\mathcal{P}_x$",
+            "equation_of_state": r"$\mathcal{E}+\mathcal{P}-Ts-\mu\rho$",
+            "equation_of_state_ratio": r"$\frac{Ts+\mu\rho}{\mathcal{E}+\mathcal{P}}$",
             "one_over_A": r"$\frac{1}{A}$",
-            "entropy": r"$S$",
-            "entropy_over_T": r"$S/T$",
+            "entropy": r"$s$",
+            "entropy_over_T": r"$s/T$",
+            "s_over_T": r"$s/T$",
             "charge_density": r"$\rho$",
             "gamma_L_from_sigma": r"$\Gamma_{L,\sigma}$",
             "gamma_L_from_alpha": r"$\Gamma_{L,\alpha}$",
             "gamma_L_from_kappabar": r"$\Gamma_{L,\bar{\kappa}}$",
-            "gamma_reldiff_sigma_alpha": r"$\frac{\Gamma_{L,\alpha}}{\Gamma_{L,\sigma}}$",
-            "gamma_reldiff_sigma_kappabar": r"$\frac{\Gamma_{L,\bar{\kappa}}}{\Gamma_{L,\sigma}}$",
+            "gamma_ratio_sigma_alpha": r"$\frac{\Gamma_{L,\alpha}}{\Gamma_{L,\sigma}}$",
+            "gamma_ratio_sigma_kappabar": r"$\frac{\Gamma_{L,\bar{\kappa}}}{\Gamma_{L,\sigma}}$",
+            "gamma_ratio_alpha_kappabar": r"$\frac{\Gamma_{L,\bar{\kappa}}}{\Gamma_{L,\alpha}}$",
             "drude_weight_from_energy_pressure": r"$\omega_p^2 (\mathcal{E}+\mathcal{P})$",
             "drude_weight_from_temperature_entropy": r"$\omega_p^2 (S, T)$",
             "drude_weight_A0": r"$\omega_p^2 (A=0)$",
             "conductivity_xx": r"$\sigma_{xx}$",
             "alpha_xx": r"$\alpha_{xx}$",
-            "kappa_xx": r"$\kappa_{xx}$",
+            "kappa_xx": r"$\kappa = \bar{\kappa} - T\frac{\alpha^2}{\sigma}$",
+            "kappa": r"$\kappa = \bar{\kappa} - T\frac{\alpha^2}{\sigma}$",
             "kappabar_xx": r"$\bar{\kappa}_{xx}$",
             "sigmaQ_from_sigma_alpha": r"$\sigma_{Q,(\sigma,\alpha)}$",
             "sigmaQ_from_sigma_kappabar": r"$\sigma_{Q,(\sigma,\bar{\kappa})}$",
-            "sigmaQ_from_alpha_kappabar": r"$\sigma_{,(\alpha,\bar{\kappa})}$",
+            "sigmaQ_from_alpha_kappabar": r"$\sigma_{Q,(\alpha,\bar{\kappa})}$",
+            "sigmaQ_over_sigmaE": r"$\frac{\sigma_{Q,(\sigma,\alpha)}}{\sigma_{xx}}$",
             "shear_length": r"$\ell_{\eta}$",
             "shear_length_alt1": r"$\ell_{\eta}$",
             "shear_length_alt2": r"$\ell_{\eta}$",
@@ -90,8 +101,8 @@ class QuantityQuantityPlot:
             "resistivity_over_T": r"$\rho/T$",
             "resistivity_xx": r"$\rho$",
             "conductivity_T": r"$\sigma T$",
+            "s_over_rho": r"$\frac{s}{\rho}$",
         }
-        self.scienceplot = scienceplot
         self.ax = ax
         self.fig = figure
         self.linelabels = linelabels
@@ -100,6 +111,8 @@ class QuantityQuantityPlot:
         self.linewidth = linewidth
         self.marker = marker
         self.cbar = cbar
+        self.cbarmin = cbarmin
+        self.cbarmax = cbarmax
         self.cmap =cmap
         self.x_quantity_name = x_quantity_name
         self.y_quantity_name = y_quantity_name
@@ -108,6 +121,7 @@ class QuantityQuantityPlot:
         self.exponential = exponential
         self.polynomial = polynomial
         self.quantity_multi_line = quantity_multi_line
+        self.multi_line_around = multi_line_around
         self.mask1 = mask1
         self.mask2 = mask2
         self.fname_appendix = fname_appendix
@@ -121,6 +135,10 @@ class QuantityQuantityPlot:
             self.ydata2 = getattr(self.model_2, self.y_quantity_name)[self.mask2]
             if self.quantity_multi_line is not None:
                 self.multiline_data2 = getattr(self.model_2, self.quantity_multi_line)[self.mask2]
+        self.yerr_name = yerr
+        if self.yerr_name is not None:
+            self.yerr = getattr(self.model_1, self.yerr_name)[self.mask1]
+        else: self.yerr=None
 
         # Initialize figure
         if self.ax is not None:
@@ -134,8 +152,6 @@ class QuantityQuantityPlot:
         self.compute_title_prefix()
         self.compute_title_appendix()
         self.title1 = (self.title_prefix + f"{y_quantity_name} vs {x_quantity_name}" + self.title_appendix).replace("_", " ")
-        if not scienceplot:
-            self.ax1.set_title(self.title1)
         # if scienceplot:
         #     self.ax1.text(.95,.95, self.title_appendix,
         #             horizontalalignment='right',
@@ -167,10 +183,18 @@ class QuantityQuantityPlot:
         """
         if self.quantity_multi_line is not None:
             self.make_cbar()
-            for i, quantity_value in enumerate(np.unique(self.multiline_data1)):
+            if self.multi_line_around is not None:
+                self.multi_line_values = np.unique(np.around(self.multiline_data1, self.multi_line_around))
+            else:
+                self.multi_line_values = np.unique(self.multiline_data1)
+            for i, quantity_value in enumerate(self.multi_line_values):
                 mask = (self.multiline_data1 == quantity_value)
-                x, y = utils.sort(self.xdata1[mask], self.ydata1[mask])
-                x, y = utils.remove_nan(x, y)
+                if self.yerr_name is None:
+                    x, y, yerr = utils.sort(self.xdata1[mask], self.ydata1[mask])
+                    x, y, yerr = utils.remove_nan(x, y)
+                else:
+                    x, y, yerr = utils.sort(self.xdata1[mask], self.ydata1[mask], yerr=self.yerr[mask])
+                    x, y, yerr = utils.remove_nan(x, y, yerr=yerr)
                 if self.linelabels:
                     line_label = self.short_dict[self.quantity_multi_line] + "={:.2f}".format(quantity_value)
                 else:
@@ -179,11 +203,9 @@ class QuantityQuantityPlot:
                     line_color = self.linecolor
                 else:
                     line_color = self.cmap1.to_rgba(quantity_value)
-                if self.scienceplot:
-                    # self.ax1.plot(x, y, "-", label=self.label_prefix1 + line_label, c=line_color)
-                    self.ax1.plot(x, y, linestyle=self.linestyle, linewidth=self.linewidth, marker=self.marker, markersize = 2, c=line_color, label=line_label)
-                else:
-                    self.ax1.plot(x, y, "-x", label=self.label_prefix1 + line_label, c=line_color)
+                self.ax1.plot(x, y, linestyle=self.linestyle, linewidth=self.linewidth, marker=self.marker, markersize = 2, c=line_color, label=line_label)
+                if self.yerr_name is not None:
+                    self.ax1.fill_between(x, y-yerr, y+yerr, color=line_color, alpha=0.2)
                 if self.exponential:
                     self.ax_exp.plot(x, np.gradient(np.log(y), x) * x, "-x",
                                      label=self.label_prefix1 + line_label, c=line_color)
@@ -277,10 +299,15 @@ class QuantityQuantityPlot:
 
     def make_cbar(self):
         quantities = np.unique(self.multiline_data1)
-        if quantities.min() < 0:
-            norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
-        else:
-            norm1 = mpl.colors.Normalize(vmin=quantities.min(), vmax=quantities.max())
+        if self.cbarmin is None:
+            self.cbarmin = quantities.min()
+        if self.cbarmax is None:
+            self.cbarmax = quantities.max()
+        # if quantities.min() < 0:
+        #     norm1 = mpl.colors.Normalize(vmin=self.cbarmin, vmax=self.cbarmax)
+        # else:
+        #     norm1 = mpl.colors.Normalize(vmin=self.cbarmin, vmax=self.cbarmax)
+        norm1 = mpl.colors.Normalize(vmin=self.cbarmin, vmax=self.cbarmax)
         # self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=mpl.cm.winter.reversed())
         self.cmap1 = mpl.cm.ScalarMappable(norm=norm1, cmap=self.cmap)
         # if self.model_1.model == "RN" or self.model_1.model == "rn":

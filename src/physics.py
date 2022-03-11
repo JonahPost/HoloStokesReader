@@ -11,7 +11,7 @@ def calc_properties(model):
     # model.s_over_rho_A0 = compute_homogeneous_A0_value(model , "s_over_rho")
     model.rho_over_s = 1/model.s_over_rho
 
-    model.kappa_xx = model.kappabar_xx - model.alpha_xx ** 2 * model.temperature / model.conductivity_xx
+    model.kappa_xx = model.kappabar_xx - model.alpha_xx ** 2 *model.temperature/ model.conductivity_xx
     model.kappabar_over_T = model.kappabar_xx / model.temperature
 
     ## Relative conductivities
@@ -27,31 +27,50 @@ def calc_properties(model):
     # Also for A=0, A-independent weight
     # compute_drude_weight_A0(model)
 
-    model.drudeweight_over_rho = model.drude_weight_from_temperature_entropy / model.charge_density
+    # model.drudeweight_over_rho = model.drude_weight_from_temperature_entropy / model.charge_density
 
     ## Thermodynamics
     model.entropy_over_T = model.entropy / model.temperature
     model.energy_plus_pressure = model.energy + model.pressure
+    model.energy_pressure_ratio = model.energy / model.pressure
+    model.pressure_ratio = model.pressure_y / model.pressure_x
+    model.stress_energy_trace = (-model.energy + model.pressure_x + model.pressure_y)/(model.energy)
     # model.energy_plus_pressure_A0 = compute_homogeneous_A0_value(model, "energy_plus_pressure")
     model.equation_of_state = model.energy + model.pressure - model.temperature * model.entropy - model.charge_density
-    model.energy_pressure_ratio = model.energy / model.pressure
+    model.equation_of_state_ratio = (model.temperature * model.entropy + model.charge_density) / (model.energy + model.pressure)
+
     model.one_over_mu = 1 / model.chem_pot
     model.conductivity_T = model.conductivity_xx * model.temperature
     model.resistivity_xx = model.conductivity_xx / (model.conductivity_xx**2 + model.conductivity_xy**2)
     model.resistivity_over_T = model.resistivity_xx / model.temperature
     model.sigmaDC_from_amplitude = np.sqrt(3) * ( 1 + model.lattice_amplitude**2 )**2 / ( 2*np.pi*(model.lattice_amplitude**2)*np.sqrt(4 + 6*(model.lattice_amplitude**2)) * model.temperature)
     model.sigmaDC_ratio = model.conductivity_xx/model.sigmaDC_from_amplitude
+
     ## Wiedermann-Franz ratio
     model.s2_over_rho2 = model.s_over_rho**2
     model.wf_ratio = (model.kappabar_xx / (model.conductivity_xx * model.temperature))
+
+    ## SIGMA_Q
+    compute_sigmaQ(model)
+    model.sigmaQ = model.sigmaQ_from_sigma_kappabar
+    model.conductivity_drude = model.conductivity_xx - model.sigmaQ
+    model.alpha_drude = model.alpha_xx + (1/model.temperature)*model.sigmaQ
+    model.kappabar_drude = model.kappabar_xx - (1/model.temperature)*model.sigmaQ
+
+    # ## SIGMA_Q ALTERNATIVE
+    # model.sigmaQ_from_sigma_kappabar_new = model.conductivity_xx - (model.rho_over_s**2 / model.temperature)*model.kappabar_xx
+    # model.sigmaQ_from_sigma_alpha_new = model.conductivity_xx - model.rho_over_s*model.alpha
+    # model.sigmaQ = model.sigmaQ_from_sigma_kappabar_new
+    # model.conductivity_drude = model.conductivity_xx - model.sigmaQ
+    # model.alpha_drude = model.alpha_xx
+    # model.kappabar_drude = model.kappabar_xx
 
     # Gamma_L
     compute_gamma_L(model, model.drude_weight_from_energy_pressure)
     ## Relative differences of Gamma_L
     compute_gamma_differences(model)
 
-    ## Sigma_Q
-    compute_sigmaQ(model)
+
 
     ## Shear Length \ell_\eta
     if model.model == "EMD":
@@ -78,18 +97,17 @@ def compute_drude_weight_A0(model):
     model.drude_weight_A0 = model.drude_weight_A0_from_energy_pressure # since both computation are equal for A=0
 
 def compute_gamma_L(model, drude_weight):
-    model.gamma_L_from_sigma = (1 / model.conductivity_xx) * drude_weight
+    model.gamma_L_from_sigma = (1 / model.conductivity_drude) * drude_weight
     # (1 / model.conductivity_xx) * (model.charge_density ** 2) / (model.energy + model.pressure)# only holds for B=0
-    model.gamma_L_from_alpha = (model.s_over_rho) * (1 / model.alpha_xx) * drude_weight
+    model.gamma_L_from_alpha = (model.s_over_rho) * (1 / model.alpha_drude) * drude_weight
     # (1 / model.alpha_xx) * (model.charge_density * model.entropy) / (model.energy + model.pressure)
-    model.gamma_L_from_kappabar = model.s_over_rho**2 * model.temperature * (1 / model.kappabar_xx) * drude_weight #(model.entropy ** 2 * model.temperature / (model.charge_density ** 2)) * (1 / model.kappabar_xx) * drude_weight
+    model.gamma_L_from_kappabar = model.s_over_rho**2 * model.temperature * (1 / model.kappabar_drude) * drude_weight #(model.entropy ** 2 * model.temperature / (model.charge_density ** 2)) * (1 / model.kappabar_xx) * drude_weight
     # (1 / model.kappabar_xx) * (model.entropy ** 2 * model.temperature) / (model.energy + model.pressure)
 
 def compute_gamma_differences(model):
-    model.gamma_reldiff_sigma_alpha = \
-        (model.gamma_L_from_alpha) / model.gamma_L_from_sigma
-    model.gamma_reldiff_sigma_kappabar = \
-        (model.gamma_L_from_kappabar) / model.gamma_L_from_sigma
+    model.gamma_ratio_sigma_alpha = model.gamma_L_from_alpha / model.gamma_L_from_sigma
+    model.gamma_ratio_sigma_kappabar = model.gamma_L_from_kappabar / model.gamma_L_from_sigma
+    model.gamma_ratio_alpha_kappabar = model.gamma_L_from_kappabar / model.gamma_L_from_alpha
 
 def compute_sigmaQ(model):
     sigma = model.conductivity_xx

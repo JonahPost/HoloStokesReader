@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 
 
 class DataSet():
-    def __init__(self, model, fname, snellius=False):
+    def __init__(self, model, fname, snellius=True):
         """"
         Parameters
         ----------
@@ -37,7 +37,7 @@ class DataSet():
         """"
         Since the different models use different keys for certain quantities, we specify them here.
         """
-        if self.model == "EMD" or self.model == "emd":
+        if self.model == "EMD" or self.model == "emd" or self.model == "GR" or self.model == "gr":
             self.periodicity_key = "Gx"
             self.lattice_amplitude_key = "Ax"
             self.free_energy_key = "FreeEnergy"
@@ -50,7 +50,7 @@ class DataSet():
             self.internal_energy_key = "EInternal"
             self.chem_pot_key = "muTB"
         else:
-            raise Exception("specify the model: 'EMD' or 'RN' or 'emd' or 'rn' ")
+            raise Exception("specify the model: 'EMD' or 'RN' or 'emd' or 'rn' or 'GR' or 'gr'.")
 
     def import_data_snellius(self):
         self.data = pd.read_csv(self.filename, sep="\t")
@@ -60,10 +60,12 @@ class DataSet():
         self.periodicity = self.periodicity_x
         self.amplitude_x = self.data["Ax"].to_numpy()
         self.amplitude_y = self.data["Ay"].to_numpy()
-        self.lattice_amplitude = self.amplitude_x
+        self.lattice_amplitude = self.amplitude_x + self.amplitude_y
+        self.one_over_A = 1 / self.lattice_amplitude
         self.temperature = self.data["T"].to_numpy()
         self.conductivity_xx = self.data["SigmaEL"].to_numpy()
         self.conductivity_xy = self.data["SigmaET"].to_numpy()
+        self.resistivity_xx = self.conductivity_xx / (self.conductivity_xx**2 + self.conductivity_xy**2)
         self.alpha_xx = self.data["SigmaAlphaL"].to_numpy() / self.temperature
         self.alpha_xy = self.data["SigmaAlphaT"].to_numpy() / self.temperature
         self.alphabar_xx = self.data["SigmaAlphaBarL"].to_numpy() / self.temperature
@@ -71,7 +73,10 @@ class DataSet():
         self.kappabar_xx = self.data["SigmaKappaL"].to_numpy() / self.temperature
         self.kappabar_xy = self.data["SigmaKappaT"].to_numpy() / self.temperature
         self.entropy = self.data["S"].to_numpy()
-        self.energy = -self.data["Ttt"].to_numpy()
+        if self.model == "RN":
+            self.energy = -self.data["Ttt"].to_numpy()
+        else:
+            self.energy = self.data["EInternal"].to_numpy()
         self.pressure_x = self.data["Txx"].to_numpy()
         self.pressure_y = self.data["Tyy"].to_numpy()
         self.pressure = self.pressure_x
@@ -82,11 +87,12 @@ class DataSet():
         self.data = pd.read_csv(self.filename, sep="\t")
         self.data = self.data.sort_values(by=[self.lattice_amplitude_key, "T"])
         self.periodicity = self.data[self.periodicity_key].to_numpy()
-        self.lattice_amplitude = self.data[self.lattice_amplitude_key].to_numpy()
+        self.lattice_amplitude = self.data[self.lattice_amplitude_key].to_numpy() *2
         self.one_over_A = 1/self.lattice_amplitude
         self.temperature = self.data["T"].to_numpy()
         self.conductivity_xx = self.data["SigmaE11"].to_numpy()  # electrical conductivity
         self.conductivity_xy = self.data["SigmaE12"].to_numpy()
+        self.resistivity_xx = self.conductivity_xx / (self.conductivity_xx**2 + self.conductivity_xy**2)
         self.alpha_xx = (self.data["SigmaAlpha11"].to_numpy()) / self.temperature  # thermo-electric conductivity
         self.alpha_xy = self.data["SigmaAlpha12"].to_numpy() / self.temperature
         self.alphabar_xx = self.data["SigmaAlphaBar11"].to_numpy() / self.temperature
@@ -99,7 +105,9 @@ class DataSet():
         except:
             pass
         self.energy = -self.data["Ttt"].to_numpy()  # energy stress tensor
-        self.pressure = self.data["Txx"].to_numpy()
+        self.pressure_x = self.data["Txx"].to_numpy()
+        self.pressure_y = self.data["Tyy"].to_numpy()
+        self.pressure = self.pressure_x
         self.pressurediffxxyy = self.data["Txx"].to_numpy() - self.data["Tyy"].to_numpy()
         try:
             self.free_energy = self.data[self.free_energy_key].to_numpy()
@@ -172,7 +180,7 @@ def pol_fit(x, y, type="linear"):
     Method to make a second order polynomial fit.
     """
     x_finite, y_finite = remove_nan(x,y)
-    print(x_finite, y_finite)
+    # print(x_finite, y_finite)
     if type == "linear":
         popt, pcov = curve_fit(polynomial_linear, x_finite, y_finite)
     elif type == "quadratic":
@@ -181,17 +189,23 @@ def pol_fit(x, y, type="linear"):
         raise Exception("specify fit type 'linear' or 'quadratic' ")
     # popt, pcov = curve_fit(polynomial, x_finite, y_finite)
     # pol = np.poly1d(np.append(popt,0))
-    print(popt)
+    # print(popt)
     pol = np.poly1d(popt)
     return np.flip(popt), pol
 
-def remove_nan(x,y):
+def remove_nan(x,y, yerr=None):
     finite_mask_x = np.isfinite(x)
     finite_mask_y = np.isfinite(y)
     finite_mask = (finite_mask_x*finite_mask_y)
-    return x[finite_mask], y[finite_mask]
+    if yerr is None:
+        return x[finite_mask], y[finite_mask], yerr
+    else:
+        return x[finite_mask], y[finite_mask], yerr[finite_mask]
 
-def sort(x,y):
+def sort(x,y, yerr=None):
     ind = np.argsort(x)
-    return x[ind], y[ind]
+    if yerr is None:
+        return x[ind], y[ind], yerr
+    else:
+        return x[ind], y[ind], yerr[ind]
     # return x,y
